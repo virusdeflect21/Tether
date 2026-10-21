@@ -99,6 +99,13 @@ class SearchRepository(
         providers.getTracks(providerId, releaseId)
     }
 
+    suspend fun recordSearch(query: String) = withContext(Dispatchers.IO) {
+        val trimmed = query.trim()
+        if (trimmed.isNotEmpty() && settings.settings.first().searchHistoryEnabled) {
+            searchDao.insert(SearchHistoryEntity(trimmed, System.currentTimeMillis()))
+        }
+    }
+
     suspend fun clearHistory() = withContext(Dispatchers.IO) { searchDao.clear() }
 
     suspend fun removeSearch(query: String) = withContext(Dispatchers.IO) { searchDao.delete(query) }

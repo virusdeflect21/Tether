@@ -7,6 +7,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -119,8 +120,9 @@ class PlaybackService : MediaSessionService() {
             .readTimeout(45, TimeUnit.SECONDS)
             .followRedirects(true)
             .build()
-        val dataSource = OkHttpDataSource.Factory(client)
+        val httpDataSource = OkHttpDataSource.Factory(client)
             .setUserAgent("Tether/1.0 (background playback)")
+        val dataSource = DefaultDataSource.Factory(this, httpDataSource)
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)

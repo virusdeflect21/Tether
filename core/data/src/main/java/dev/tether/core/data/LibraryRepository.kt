@@ -274,7 +274,7 @@ class LibraryRepository(
                 add(MediaStore.Audio.Media.DURATION)
                 add(MediaStore.Audio.Media.TRACK)
                 add(MediaStore.Audio.Media.YEAR)
-                add(MediaStore.Audio.Media.GENRE)
+                if (Build.VERSION.SDK_INT >= 30) add(MediaStore.Audio.Media.GENRE)
                 add(MediaStore.Audio.Media.DISPLAY_NAME)
                 add(MediaStore.Audio.Media.SIZE)
                 add(MediaStore.Audio.Media.MIME_TYPE)
@@ -304,7 +304,7 @@ class LibraryRepository(
                 val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val trackCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
                 val yearCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
-                val genreCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
+                val genreCol = cursor.getColumnIndex(MediaStore.Audio.Media.GENRE)
                 val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
                 val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
                 val mimeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.MIME_TYPE)
@@ -332,7 +332,7 @@ class LibraryRepository(
                         val duration = cursor.getLong(durationCol)
                         val trackNumber = cursor.getInt(trackCol).let { if (it > 0) it % 1000 else null }
                         val year = cursor.getInt(yearCol).takeIf { it > 0 }
-                        val genre = cursor.getString(genreCol)?.trim()?.takeIf { it.isNotBlank() }
+                        val genre = genreCol.takeIf { it >= 0 }?.let { cursor.getString(it) }?.trim()?.takeIf { it.isNotBlank() }
                         val name = cursor.getString(nameCol)
                         val size = cursor.getLong(sizeCol)
                         val mime = cursor.getString(mimeCol)
