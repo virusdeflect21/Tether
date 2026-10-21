@@ -1,0 +1,23 @@
+*.iml
+.gradle/
+.idea/
+.kotlin/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+!debug.keystore
+.DS_Store
+docs/build-output/
+
+# Downloaded reference material and design-inspiration sources are not part of Tether.
+InnerTune-0.5.10/
+BeatWave-6.1.1/
+*.zip
+*.apk
+*.aab
+
+# Local build logs
+build-*.log
