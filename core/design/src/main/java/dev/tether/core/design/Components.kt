@@ -6,15 +6,16 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,20 +26,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -54,7 +55,7 @@ fun TetherSectionHeader(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(Modifier.weight(1f)) {
@@ -66,34 +67,40 @@ fun TetherSectionHeader(
                 overflow = TextOverflow.Ellipsis,
             )
             if (!subtitle.isNullOrBlank()) {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(1.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
         if (actionLabel != null && onAction != null) {
-            Row(
+            TetherGlass(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .clickable(onClick = onAction)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .clip(CircleShape)
+                    .clickable(onClick = onAction),
+                shape = CircleShape,
+                contentPadding = PaddingValues(horizontal = 13.dp, vertical = 8.dp),
             ) {
-                Text(
-                    text = actionLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.width(2.dp))
-                Icon(
-                    Icons.Rounded.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = actionLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Icon(
+                        Icons.Rounded.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
             }
         }
     }
@@ -107,22 +114,45 @@ fun TetherPrimaryButton(
     icon: ImageVector? = null,
     enabled: Boolean = true,
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        ),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 22.dp, vertical = 12.dp),
+    val shape = CircleShape
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .clip(shape)
+            .background(
+                Brush.horizontalGradient(
+                    if (enabled) {
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary,
+                        )
+                    } else {
+                        listOf(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                    },
+                ),
+            )
+            .border(1.dp, Color.White.copy(alpha = if (enabled) 0.24f else 0.08f), shape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 22.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
-        Text(text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -134,20 +164,34 @@ fun TetherOutlineButton(
     icon: ImageVector? = null,
     enabled: Boolean = true,
 ) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        shape = RoundedCornerShape(50),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onBackground),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+    TetherGlass(
+        modifier = modifier
+            .height(50.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        shape = CircleShape,
+        contentPadding = PaddingValues(horizontal = 20.dp),
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            )
         }
-        Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -159,26 +203,45 @@ fun TetherChip(
     leading: ImageVector? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val background = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val foreground = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val foreground = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val shape = CircleShape
+    val base = modifier
+        .clip(shape)
+        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+    if (selected) {
+        Box(
+            base
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary),
+                    ),
+                )
+                .border(1.dp, Color.White.copy(alpha = 0.22f), shape)
+                .padding(horizontal = 15.dp, vertical = 9.dp),
+        ) {
+            ChipContent(text, leading, foreground)
+        }
+    } else {
+        TetherGlass(
+            modifier = base,
+            shape = shape,
+            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 9.dp),
+        ) {
+            ChipContent(text, leading, foreground)
+        }
+    }
+}
+
+@Composable
+private fun ChipContent(text: String, leading: ImageVector?, foreground: Color) {
     Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(50))
-            .background(background)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (leading != null) {
             Icon(leading, contentDescription = null, tint = foreground, modifier = Modifier.size(15.dp))
         }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            color = foreground,
-            maxLines = 1,
-        )
+        Text(text, style = MaterialTheme.typography.labelLarge, color = foreground, maxLines = 1)
     }
 }
 
@@ -187,13 +250,14 @@ fun TetherBadge(text: String, modifier: Modifier = Modifier, color: Color = Mate
     Text(
         text = text.uppercase(),
         modifier = modifier
-            .clip(RoundedCornerShape(5.dp))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(5.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .clip(CircleShape)
+            .background(color.copy(alpha = 0.13f))
+            .border(1.dp, color.copy(alpha = 0.34f), CircleShape)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
         color = color,
         fontSize = 9.sp,
         fontWeight = FontWeight.Bold,
-        letterSpacing = 0.8.sp,
+        letterSpacing = 0.9.sp,
         maxLines = 1,
     )
 }
@@ -205,18 +269,40 @@ fun TetherIconBubble(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 42.dp,
-    container: Color = MaterialTheme.colorScheme.surfaceVariant,
+    container: Color = Color.Transparent,
     content: Color = MaterialTheme.colorScheme.onSurface,
 ) {
-    Box(
+    TetherGlass(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(container)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+        shape = CircleShape,
+        tone = container,
     ) {
-        Icon(icon, contentDescription = contentDescription, tint = content, modifier = Modifier.size(size * 0.46f))
+        Box(Modifier.fillMaxWidth().height(size), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = contentDescription, tint = content, modifier = Modifier.size(size * 0.46f))
+        }
+    }
+}
+
+@Composable
+fun TetherSnackbarHost(
+    hostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(hostState = hostState, modifier = modifier) { data ->
+        TetherGlass(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
+        ) {
+            Text(
+                data.visuals.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 
@@ -230,36 +316,42 @@ fun TetherEmptyState(
     icon: ImageVector = Icons.Rounded.MusicNote,
     showMark: Boolean = true,
 ) {
-    Column(
+    TetherGlass(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 44.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 20.dp, vertical = 28.dp),
+        contentPadding = PaddingValues(horizontal = 26.dp, vertical = 30.dp),
     ) {
-        if (showMark) {
-            TetherMark(56.dp, cornerRadius = 14.dp)
-        } else {
-            Box(
-                Modifier
-                    .size(54.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (showMark) {
+                TetherMark(58.dp, cornerRadius = 17.dp)
+            } else {
+                Box(
+                    Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
             }
-        }
-        Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
-        Text(
-            body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-        if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(2.dp))
-            TetherPrimaryButton(actionLabel, onAction)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
+            Text(
+                body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            if (actionLabel != null && onAction != null) {
+                Spacer(Modifier.height(2.dp))
+                TetherPrimaryButton(actionLabel, onAction)
+            }
         }
     }
 }
@@ -270,17 +362,16 @@ fun TetherInfoBanner(
     modifier: Modifier = Modifier,
     tone: Color = MaterialTheme.colorScheme.secondary,
 ) {
-    Surface(
+    TetherGlass(
         modifier = modifier.fillMaxWidth(),
-        color = tone.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, tone.copy(alpha = 0.22f)),
+        shape = RoundedCornerShape(18.dp),
+        tone = tone.copy(alpha = 0.10f),
+        contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

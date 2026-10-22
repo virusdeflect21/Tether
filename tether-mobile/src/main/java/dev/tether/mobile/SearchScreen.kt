@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tether.core.design.TetherBadge
 import dev.tether.core.design.TetherEmptyState
+import dev.tether.core.design.TetherIconBubble
 import dev.tether.core.design.TetherSectionHeader
 import dev.tether.core.model.AlbumSummary
 import dev.tether.core.model.ArtistSummary
@@ -82,9 +83,13 @@ fun SearchScreen(
                 .padding(start = 6.dp, end = 18.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Rounded.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
-            }
+            TetherIconBubble(
+                icon = Icons.Rounded.ArrowBack,
+                contentDescription = "Back",
+                onClick = onBack,
+                size = 40.dp,
+            )
+            Spacer(Modifier.width(8.dp))
             SearchField(
                 value = state.query,
                 onValueChange = searchViewModel::setQuery,
@@ -152,12 +157,17 @@ fun SearchScreen(
                     }
                 }
                 item {
-                    TetherEmptyState(
-                        title = "Search everything",
-                        body = "Tether searches your library first, then asks ccMixter for Creative Commons music when online discovery is enabled. If a provider is unreachable, you'll see that instead of made-up results.",
-                        icon = Icons.Rounded.Search,
-                        showMark = false,
-                    )
+                    Box(
+                        if (recent.isEmpty()) Modifier.fillParentMaxSize() else Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        TetherEmptyState(
+                            title = "Search everything",
+                            body = "Find music in your library, then explore Creative Commons tracks from ccMixter.",
+                            icon = Icons.Rounded.Search,
+                            showMark = false,
+                        )
+                    }
                 }
             } else {
                 if (state.searchingLocal && state.results.localTracks.isEmpty() && state.results.remoteTracks.isEmpty()) {

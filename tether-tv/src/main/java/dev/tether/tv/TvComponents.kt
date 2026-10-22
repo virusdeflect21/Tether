@@ -572,7 +572,7 @@ fun TvSidebar(
         }
         Spacer(Modifier.height(14.dp))
         Text(
-            "Tether TV 1.0.0\nLocal-first · No account",
+            "Tether TV ${BuildConfig.VERSION_NAME}\nLocal-first · No account",
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 16.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
             modifier = Modifier.padding(horizontal = 4.dp),

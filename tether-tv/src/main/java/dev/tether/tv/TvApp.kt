@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.tether.core.design.TetherCover
 import dev.tether.core.design.TetherMark
+import dev.tether.core.design.TetherSnackbarHost
 import dev.tether.core.design.TetherTheme
 import dev.tether.core.design.TetherWordmark
 import dev.tether.core.model.AlbumSummary
@@ -328,7 +328,7 @@ fun TetherTvRoot(
                     }
                 }
             }
-            SnackbarHost(
+            TetherSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

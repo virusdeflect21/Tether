@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -93,7 +94,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.tether.core.design.PlayingBars
 import dev.tether.core.design.TetherBadge
+import dev.tether.core.design.TetherChip
 import dev.tether.core.design.TetherCover
+import dev.tether.core.design.TetherGlass
+import dev.tether.core.design.TetherIconBubble
 import dev.tether.core.design.TetherMark
 import dev.tether.core.design.TetherPrimaryButton
 import dev.tether.core.model.AlbumSummary
@@ -125,10 +129,13 @@ fun MobileTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (onBack != null) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Rounded.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
-            }
-            Spacer(Modifier.width(4.dp))
+            TetherIconBubble(
+                icon = Icons.Rounded.ArrowBack,
+                contentDescription = "Back",
+                onClick = onBack,
+                size = 40.dp,
+            )
+            Spacer(Modifier.width(10.dp))
         }
         Column(Modifier.weight(1f)) {
             Text(
@@ -168,9 +175,10 @@ fun TrackRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.09f) else Color.Transparent)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick ?: onMenuClick)
-            .padding(horizontal = 8.dp, vertical = 7.dp),
+            .padding(horizontal = 7.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -181,8 +189,8 @@ fun TrackRow(
                 artworkUri = track.artworkUri,
                 seed = track.albumKey + track.artist,
                 title = track.displayAlbum,
-                modifier = Modifier.size(50.dp),
-                cornerRadius = 11.dp,
+                modifier = Modifier.size(52.dp),
+                cornerRadius = 14.dp,
                 initialsSize = 15.sp,
             )
         }
@@ -241,14 +249,14 @@ fun TrackCard(
     modifier: Modifier = Modifier,
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
-    width: Int = 158,
+    width: Int = 164,
 ) {
     Column(
         modifier = modifier
             .width(width.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(24.dp))
             .combinedClickable(onClick = onClick, onLongClick = onMenuClick)
-            .padding(bottom = 2.dp),
+            .padding(bottom = 3.dp),
     ) {
         Box {
             TetherCover(
@@ -258,40 +266,61 @@ fun TrackCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f),
-                cornerRadius = 17.dp,
+                cornerRadius = 22.dp,
                 initialsSize = 34.sp,
             )
             if (isCurrent && isPlaying) {
-                Box(
+                TetherGlass(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(9.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.82f))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                        .padding(10.dp),
+                    shape = CircleShape,
+                    tone = Color.Black.copy(alpha = 0.32f),
+                    contentPadding = PaddingValues(horizontal = 11.dp, vertical = 7.dp),
                 ) {
                     PlayingBars(barCount = 3)
                 }
             }
-            Box(
+            TetherGlass(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .size(30.dp)
+                    .padding(8.dp)
+                    .size(31.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.62f))
                     .clickable(onClick = onMenuClick),
-                contentAlignment = Alignment.Center,
+                shape = CircleShape,
+                tone = Color.Black.copy(alpha = 0.28f),
             ) {
-                Icon(
-                    Icons.Rounded.MoreVert,
-                    contentDescription = "Options for ${track.displayTitle}",
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp),
-                )
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.MoreVert,
+                        contentDescription = "Options for ${track.displayTitle}",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+            TetherGlass(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(10.dp)
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onClick),
+                shape = CircleShape,
+                tone = MaterialTheme.colorScheme.background.copy(alpha = 0.42f),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        if (isCurrent && isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = "Play ${track.displayTitle}",
+                        tint = Color.White,
+                        modifier = Modifier.size(21.dp),
+                    )
+                }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         Text(
             text = track.displayTitle,
             style = MaterialTheme.typography.titleMedium,
@@ -313,8 +342,8 @@ fun TrackCard(
 fun AlbumCard(album: AlbumSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .width(158.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .width(164.dp)
+            .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
     ) {
         TetherCover(
@@ -324,10 +353,10 @@ fun AlbumCard(album: AlbumSummary, onClick: () -> Unit, modifier: Modifier = Mod
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f),
-            cornerRadius = 17.dp,
+            cornerRadius = 22.dp,
             initialsSize = 30.sp,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         Text(
             album.title,
             style = MaterialTheme.typography.titleMedium,
@@ -384,8 +413,8 @@ fun ArtistCard(artist: ArtistSummary, onClick: () -> Unit, modifier: Modifier = 
 fun PlaylistCard(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .width(158.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .width(164.dp)
+            .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
     ) {
         TetherCover(
@@ -395,10 +424,10 @@ fun PlaylistCard(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = M
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f),
-            cornerRadius = 17.dp,
+            cornerRadius = 22.dp,
             initialsSize = 32.sp,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         Text(
             playlist.name,
             style = MaterialTheme.typography.titleMedium,
@@ -428,73 +457,99 @@ fun MiniPlayer(
     } else {
         0f
     }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 3.dp,
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
-        Column {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-            ) {
+        TetherGlass(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(27.dp),
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpen)
+                        .padding(start = 8.dp, top = 8.dp, end = 5.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(11.dp),
+                ) {
+                    TetherCover(
+                        artworkUri = track.artworkUri,
+                        seed = track.albumKey + track.artist,
+                        title = track.displayAlbum,
+                        modifier = Modifier.size(46.dp),
+                        cornerRadius = 14.dp,
+                        initialsSize = 14.sp,
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            track.displayTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            buildString {
+                                append(track.displayArtist)
+                                if (state.isBuffering) append(" \u00b7 buffering")
+                                if (!track.isOfflinePlayable) append(" \u00b7 streaming")
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    TetherGlass(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable(onClick = onPlayPause),
+                        shape = CircleShape,
+                        tone = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (state.isPlaying) "Pause" else "Play",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(21.dp),
+                            )
+                        }
+                    }
+                    IconButton(onClick = onNext, enabled = state.hasNext, modifier = Modifier.size(38.dp)) {
+                        Icon(
+                            Icons.Rounded.SkipNext,
+                            contentDescription = "Next track",
+                            tint = if (state.hasNext) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.size(21.dp),
+                        )
+                    }
+                }
                 Box(
                     Modifier
-                        .fillMaxWidth(progress)
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                         .height(2.dp)
-                        .background(MaterialTheme.colorScheme.primary),
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onOpen)
-                    .padding(start = 10.dp, top = 8.dp, end = 6.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(11.dp),
-            ) {
-                TetherCover(
-                    artworkUri = track.artworkUri,
-                    seed = track.albumKey + track.artist,
-                    title = track.displayAlbum,
-                    modifier = Modifier.size(48.dp),
-                    cornerRadius = 11.dp,
-                    initialsSize = 15.sp,
-                )
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        track.displayTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        buildString {
-                            append(track.displayArtist)
-                            if (state.isBuffering) append(" \u00b7 buffering")
-                            if (!track.isOfflinePlayable) append(" \u00b7 streaming")
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                IconButton(onClick = onPlayPause) {
-                    Icon(
-                        if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (state.isPlaying) "Pause" else "Play",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                IconButton(onClick = onNext, enabled = state.hasNext) {
-                    Icon(
-                        Icons.Rounded.SkipNext,
-                        contentDescription = "Next track",
-                        tint = if (state.hasNext) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(progress)
+                            .fillMaxHeight()
+                            .clip(CircleShape)
+                            .background(
+                                androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary,
+                                    ),
+                                ),
+                            ),
                     )
                 }
             }
@@ -511,50 +566,65 @@ data class TetherNavItem(
 
 @Composable
 fun TetherBottomBar(items: List<TetherNavItem>, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 4.dp,
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(66.dp)
-                .padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        TetherGlass(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(29.dp),
         ) {
-            items.forEach { item ->
-                val color by animateColorAsState(
-                    if (item.selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    label = "navColor",
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable(onClick = item.onClick)
-                        .padding(vertical = 5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(
-                                if (item.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f) else Color.Transparent,
-                            )
-                            .padding(horizontal = 15.dp, vertical = 3.dp),
-                    ) {
-                        Icon(item.icon, contentDescription = item.label, tint = color, modifier = Modifier.size(21.dp))
-                    }
-                    Text(
-                        item.label,
-                        color = color,
-                        fontSize = 10.sp,
-                        fontWeight = if (item.selected) FontWeight.SemiBold else FontWeight.Medium,
-                        maxLines = 1,
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                items.forEach { item ->
+                    val color by animateColorAsState(
+                        if (item.selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "navColor",
                     )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(22.dp))
+                            .clickable(onClick = item.onClick)
+                            .padding(vertical = 2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    if (item.selected) {
+                                        androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                            listOf(
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.26f),
+                                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
+                                            ),
+                                        )
+                                    } else {
+                                        androidx.compose.ui.graphics.SolidColor(Color.Transparent)
+                                    },
+                                )
+                                .padding(horizontal = 14.dp, vertical = 4.dp),
+                        ) {
+                            Icon(item.icon, contentDescription = item.label, tint = color, modifier = Modifier.size(21.dp))
+                        }
+                        Text(
+                            item.label,
+                            color = color,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 9.sp,
+                            fontWeight = if (item.selected) FontWeight.SemiBold else FontWeight.Medium,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -583,40 +653,42 @@ fun SearchField(
             onSearch()
         }),
         decorationBox = { inner ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 16.dp, vertical = 13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            TetherGlass(
+                modifier = Modifier.fillMaxWidth(),
+                shape = CircleShape,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 13.dp),
             ) {
-                Icon(
-                    Icons.Rounded.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-                Box(Modifier.weight(1f)) {
-                    if (value.isBlank()) {
-                        Text(
-                            "Search tracks, albums, artists\u2026",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                        )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Box(Modifier.weight(1f)) {
+                        if (value.isBlank()) {
+                            Text(
+                                "Search tracks, albums, artists\u2026",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                        inner()
                     }
-                    inner()
-                }
-                if (value.isNotEmpty()) {
-                    IconButton(onClick = { onValueChange("") }, modifier = Modifier.size(24.dp)) {
-                        Icon(
-                            Icons.Rounded.Close,
-                            contentDescription = "Clear search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
-                        )
+                    if (value.isNotEmpty()) {
+                        IconButton(onClick = { onValueChange("") }, modifier = Modifier.size(24.dp)) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -983,20 +1055,11 @@ fun FilterChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(options, key = { it.first }) { (value, label) ->
-            val active = value == selected
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { onSelect(value) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            TetherChip(
+                text = label,
+                selected = value == selected,
+                onClick = { onSelect(value) },
+            )
         }
     }
 }

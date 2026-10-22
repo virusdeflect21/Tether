@@ -1,8 +1,8 @@
 # Tether
 
-**Music, untethered.** Tether is a local-first music player for Android and Android TV. It plays the music you already own, imports folders through the system picker, and can discover openly licensed music from ccMixter. No account, no ads, and no invented streams or lyrics.
+**Music, untethered.** Tether is a local-first music player for Android and Android TV. It plays the music already on your device, opens folders through the system picker, and can discover openly licensed music from ccMixter. No account, no ads, and no invented streams or lyrics.
 
-Tether ships as two independent apps that share one library format:
+Tether comes as two separate apps. Each install keeps its own on-device library, favorites, playlists, settings, and playback state. Nothing is synced between the phone and the TV.
 
 | App | Package | Minimum Android |
 | --- | --- | --- |
@@ -13,8 +13,10 @@ Tether ships as two independent apps that share one library format:
 
 Grab the APKs from the [latest GitHub release](https://github.com/virusdeflect21/Tether/releases/latest):
 
-- `tether-mobile-release.apk` — phone / tablet
-- `tether-tv-release.apk` — Android TV / Google TV
+- `tether-mobile-release.apk` - phone / tablet
+- `tether-tv-release.apk` - Android TV / Google TV
+
+Checksums are in [SHA256SUMS](SHA256SUMS) and are attached to the release.
 
 Install over ADB:
 
@@ -23,51 +25,53 @@ adb install -r tether-mobile-release.apk
 adb install -r tether-tv-release.apk
 ```
 
-Enable “Install unknown apps” if you install directly on the device. The TV app appears in the Android TV leanback launcher.
+Enable "Install unknown apps" if you install directly on the device. The TV app appears in the Android TV leanback launcher.
 
 ## Screenshots
 
-| Mobile onboarding | Mobile player |
+| Mobile | TV |
 | --- | --- |
-| ![Tether Mobile onboarding](screenshots/mobile-onboarding.png) | ![Tether Mobile player](screenshots/mobile-player.png) |
+| ![Tether Mobile home](screenshots/mobile-home.png) | ![Tether TV home](screenshots/tv-home.png) |
+| ![Tether Mobile player](screenshots/mobile-player.png) | ![Tether TV Now Playing](screenshots/tv-now-playing.png) |
+| ![Tether Mobile library](screenshots/mobile-library.png) | ![Tether TV library](screenshots/tv-library.png) |
 
-| TV home | TV Now Playing |
-| --- | --- |
-| ![Tether TV home](screenshots/tv-home.png) | ![Tether TV Now Playing](screenshots/tv-now-playing.png) |
+More: [mobile search](screenshots/mobile-search.png), [mobile downloads](screenshots/mobile-downloads.png), [mobile playlists](screenshots/mobile-playlists.png), [TV screensaver](screenshots/tv-screensaver.png).
 
-More: [mobile lyrics](screenshots/mobile-lyrics.png), [TV lyrics](screenshots/tv-lyrics.png), [TV video mode](screenshots/tv-video.png). Screenshots were captured on Android emulators with one CC BY-NC 4.0 test track from ccMixter.
+Screenshots use short local test tracks, including one CC BY-NC 4.0 track from ccMixter. Artwork shown here is generated locally.
 
 ## What it does
 
-### Shared
+### Both apps
 
-- **Local playback** through Android Media3/ExoPlayer, with a background `MediaSessionService`, notification and lock-screen controls.
+- **Local playback** through Android Media3/ExoPlayer, with a background `MediaSessionService`, notification controls, and lock-screen controls.
 - **Library scanning** with MediaStore and the Storage Access Framework. Add a folder or import individual files; nothing is uploaded.
-- **Albums, artists, tracks, favorites and search** over the real local library.
-- **Playlists** with create, rename, delete, add/remove tracks, M3U import and export.
-- **Queue management**, shuffle, repeat, seek, sleep timer and resume-state persistence.
-- **Lyrics** from LRCLIB or an imported `.lrc` file. Synced, plain-text and unavailable states are shown honestly. Plain lyrics are never animated as if they were timed.
-- **Downloads** only when the provider declares a license that explicitly permits downloading (Creative Commons, public domain or sampling+). Attribution and license remain with the track. No DRM bypass and no guessed download URLs.
-- **Backup and diagnostics** for library/settings, plus a provider connectivity check.
-- **Themes**: dark, light or system, with the Tether blue/violet/magenta accent or a custom accent.
+- **Albums, artists, tracks, favorites, and search** over the real local library.
+- **Playlists** with create, rename, delete, add/remove tracks, and M3U import.
+- **Queue management**, shuffle, repeat, seek, and resume-state persistence.
+- **Lyrics** from LRCLIB or an imported `.lrc` file. Synced, plain-text, and unavailable states are shown honestly. Plain lyrics are never animated as if they were timed.
+- **Downloads** only when the provider declares a license that explicitly permits downloading (Creative Commons, public domain, or sampling+). Attribution and license remain with the track. No DRM bypass and no guessed download URLs.
+- **Themes**: dark, light, or system, with the Tether blue/violet/magenta accent or a custom accent.
 - **Metadata and artwork** from local tags and embedded artwork, with generated fallback covers.
+- **Poppins typography** bundled under the SIL Open Font License.
 
 ### Tether Mobile
 
-- Home, Explore, Library, Downloads, Playlists and Search.
-- Full player with artwork, synchronized/plain lyrics, queue editing, favorite and add-to-playlist actions.
+- Portrait-only Home, Explore, Library, Downloads, Playlists, and Search.
+- Full player with artwork, synchronized/plain lyrics, editable queue, favorite and add-to-playlist actions.
 - Mini-player that stays above the bottom navigation.
-- Folder picker, multi-file import and M3U import/export.
-- Settings, storage diagnostics, backup, about and open-source notices.
+- Folder picker, multi-file import, M3U import, and M3U export.
+- Sleep timer, backup, storage diagnostics, settings, About, and open-source notices.
+- Accessibility labels and honest empty states throughout.
 
 ### Tether TV
 
-- 10-foot, D-pad-first UI with a visible focus ring on every actionable element.
-- Sidebar navigation, Home, Search, Library, Playlists, Downloads and Settings.
-- Now Playing with three modes: **Cover**, **Lyrics** and **Video**.
-- Switching modes never restarts playback. Video mode attaches a local video file, plays it muted on a second ExoPlayer, and keeps it synchronized with the shared audio session.
-- Screensaver with the clock, current track and artwork; any remote key dismisses it.
-- Startup screen preference (Home or Now Playing), lyrics size, artwork scale and screensaver timeout.
+- Landscape, D-pad-first UI with a visible focus ring on every actionable element.
+- Sidebar navigation: Home, Search, Library, Playlists, Downloads, and Settings.
+- Now Playing with three modes: **Cover**, **Lyrics**, and **Video**.
+- Switching modes never restarts playback. Video mode attaches a local video file, plays it muted on a second ExoPlayer, and keeps it synchronized with the audio.
+- Screensaver with the clock, current track, and artwork. A remote key dismisses it.
+- Startup screen preference (Home or Now Playing), lyrics size, artwork scale, and screensaver timeout.
+- M3U playlist import and licensed downloads.
 
 ## Content policy
 
@@ -79,9 +83,9 @@ Downloaded files are stored in the app's external files directory under `Tether 
 
 ## Privacy
 
-- No account, analytics, advertising ID or telemetry.
-- Listening history, playlists and settings stay in the app's local database/DataStore.
-- Network requests happen only for provider search, lyrics lookup, artwork and user-requested downloads.
+- No account, analytics, advertising ID, or telemetry.
+- Listening history, playlists, favorites, and settings stay in each app's local database/DataStore.
+- Network requests happen only for provider search, lyrics lookup, artwork, and user-requested downloads.
 - The app does not upload the local library.
 
 See [PRIVACY.md](PRIVACY.md) for details.
@@ -133,9 +137,10 @@ tether-tv        Android TV Compose app
 
 - Internet Archive is not included; only ccMixter is available for online discovery.
 - TV video mode requires a local video file selected with the system picker. It is a companion video track, not a video streaming provider.
+- Phone and TV libraries, favorites, playlists, settings, and playback sessions are separate. Install and set up each app independently.
 - The release APKs use a development signing key, not a production app-store key.
 - Online availability depends on the provider being reachable from your network.
 
 ## License
 
-Tether's source code is released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for third-party components and brand assets.
+Tether's source code is released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for third-party components and brand assets. The bundled Poppins font is licensed under the SIL Open Font License 1.1; the full text is in [licenses/Poppins-OFL.txt](licenses/Poppins-OFL.txt).

@@ -233,19 +233,19 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Rounded.Folder,
                         title = "Add a music folder",
-                        subtitle = "Use the system folder picker. Tether keeps read permission only for files you add.",
+                        subtitle = "Choose a folder with the system picker. Tether only reads the folders you choose.",
                         onClick = onAddFolder,
                     )
                     SettingsRow(
                         icon = Icons.Rounded.Upload,
                         title = "Import individual audio files",
-                        subtitle = "Useful for a few files without granting broad library access.",
+                        subtitle = "Add a few songs without granting access to your whole library.",
                         onClick = onImportFiles,
                     )
                     SettingsRow(
                         icon = Icons.Rounded.Refresh,
                         title = "Rescan device audio",
-                        subtitle = "Refresh the index from MediaStore. Existing playlists stay intact.",
+                        subtitle = "Look for new or removed music on this device. Playlists stay intact.",
                         onClick = {
                             if (hasAudioPermission) viewModel.scanMediaStore() else onRequestPermission()
                         },
@@ -263,14 +263,14 @@ fun SettingsScreen(
                     ToggleRow(
                         icon = Icons.Rounded.CloudDownload,
                         title = "Online discovery",
-                        subtitle = "Browse Creative Commons music from ccMixter. Local playback never depends on this.",
+                        subtitle = "Browse Creative Commons music from ccMixter. Your local library works offline.",
                         checked = settings.onlineDiscoveryEnabled,
                         onCheckedChange = viewModel::setOnlineDiscovery,
                     )
                     ToggleRow(
                         icon = Icons.Rounded.Search,
                         title = "Lyrics from LRCLIB",
-                        subtitle = "Look up synced or plain lyrics. Imported .lrc files always take priority.",
+                        subtitle = "Find synced or plain lyrics. Imported .lrc files always take priority.",
                         checked = settings.lrclibEnabled,
                         onCheckedChange = viewModel::setLrclib,
                     )
@@ -288,7 +288,7 @@ fun SettingsScreen(
                         modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
                     )
                     Text(
-                        "Downloads still depend on each track's declared license. Lossless falls back to the best file the source actually offers.",
+                        "Available quality depends on the source and its license. Tether uses the best file the provider offers.",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
@@ -305,19 +305,19 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Rounded.Upload,
                         title = "Export backup",
-                        subtitle = "Playlists, favorites and preferences as JSON. Audio and downloaded files are not included.",
+                        subtitle = "Save playlists, favorites, and settings as a JSON file. Audio files are not included.",
                         onClick = { exportLauncher.launch("tether-backup.json") },
                     )
                     SettingsRow(
                         icon = Icons.Rounded.Download,
                         title = "Restore backup",
-                        subtitle = "Merge playlists and preferences from a Tether backup file.",
+                        subtitle = "Merge playlists and settings from a Tether backup.",
                         onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
                     )
                     SettingsRow(
                         icon = Icons.Rounded.Delete,
                         title = "Clear artwork and lyric caches",
-                        subtitle = "Frees cached images and remote lyric copies. Files and downloads stay.",
+                        subtitle = "Remove cached artwork and saved lyrics. Music and downloads stay.",
                         onClick = { showClearCaches = true },
                     )
                 }
@@ -339,7 +339,7 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Rounded.Headphones,
                         title = "Diagnostics",
-                        subtitle = "Check permissions, storage, database, network and provider endpoints.",
+                        subtitle = "Check permissions, storage, network, and provider status.",
                         onClick = onOpenDiagnostics,
                     )
                     SettingsRow(
@@ -645,7 +645,7 @@ fun DiagnosticsScreen(
             ) {
                 item {
                     Text(
-                        "Checks permissions, storage, the local database, provider endpoints and cached lyrics. No credentials or full file paths are shown.",
+                        "Checks permissions, storage, the local database, provider connections, and saved lyrics. No passwords or full file paths are shown.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -753,15 +753,15 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit) {
                 }
             }
             Text(
-                "Tether is a local-first music player for the music you own and for openly licensed music you choose to explore. It does not require an account and does not include ads or analytics.",
+                "Tether plays the music you own and independent music shared under Creative Commons. No account, no ads, no analytics.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            AboutBullet("Local playback", "MediaStore scanning, system-picked folders, individual file imports and app-managed downloads all play offline.")
-            AboutBullet("Honest providers", "ccMixter supplies Creative Commons discovery. LRCLIB supplies lyrics. If a provider is unavailable, Tether says so.")
-            AboutBullet("No fake downloads", "A track can be downloaded only when its declared license permits it and the provider supplies a real file URL.")
-            AboutBullet("Playlists and backups", "Playlists use real library tracks. JSON backups move playlists and preferences, not copyrighted audio.")
-            AboutBullet("TV companion", "Tether TV is a separate installable app with D-pad focus navigation, a 10-foot layout and Cover, Lyrics and Video now-playing modes.")
+            AboutBullet("Plays offline", "Your device library, chosen folders, imported files, and saved downloads work without a connection.")
+            AboutBullet("Open discovery", "Find Creative Commons music from ccMixter and lyrics from LRCLIB. If a service is down, Tether tells you.")
+            AboutBullet("Downloads you can trust", "Tether saves a track only when its license allows it and the artist provides a downloadable file.")
+            AboutBullet("Playlists and backups", "Build playlists from real library tracks. Backups save your playlists and settings, never your audio.")
+            AboutBullet("Tether on TV", "Install Tether TV for a big-screen player with D-pad navigation and cover, lyrics, and video modes.")
             Surface(
                 shape = RoundedCornerShape(18.dp),
                 color = MaterialTheme.colorScheme.surface,
@@ -770,7 +770,7 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Privacy", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "Library scanning and playback happen on this device. Network requests are made only for online discovery, lyrics and downloads you initiate. No advertising identifiers are collected.",
+                        "Your library stays on this device. Tether goes online only for discovery, lyrics, and downloads you start. No advertising ID is collected.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -818,6 +818,7 @@ fun LicensesScreen(onBack: () -> Unit) {
         "OkHttp" to "Apache License 2.0",
         "Coil" to "Apache License 2.0",
         "Material Icons" to "Apache License 2.0",
+        "Poppins typeface" to "SIL Open Font License 1.1",
     )
     Column(Modifier.fillMaxSize()) {
         MobileTopBar(title = "Licenses & credits", onBack = onBack)
@@ -834,7 +835,7 @@ fun LicensesScreen(onBack: () -> Unit) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                         Text("Tether", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                         Text(
-                            "Copyright the Tether contributors. Licensed under the Apache License, Version 2.0. The app's license text is included with the source distribution.",
+                            "Copyright the Tether contributors. Licensed under the MIT License. The license text is included with the source distribution.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

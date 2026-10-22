@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Close
@@ -53,10 +54,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,6 +78,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -84,9 +88,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tether.core.design.LyricsPane
+import dev.tether.core.design.TetherBackdrop
 import dev.tether.core.design.TetherBadge
 import dev.tether.core.design.TetherCover
 import dev.tether.core.design.TetherEmptyState
+import dev.tether.core.design.TetherGlass
+import dev.tether.core.design.TetherIconBubble
 import dev.tether.core.design.TetherInfoBanner
 import dev.tether.core.design.TetherInk
 import dev.tether.core.design.TetherPrimaryButton
@@ -101,6 +108,7 @@ import dev.tether.core.player.RepeatMode
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     viewModel: MobileViewModel,
@@ -143,36 +151,12 @@ fun PlayerScreen(
     val favorite = favoriteIds.contains(track.id)
     val next = state.queue.getOrNull(state.currentIndex + 1)
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TetherInk),
-    ) {
-        TetherCover(
-            artworkUri = track.artworkUri,
-            seed = track.albumKey + track.artist,
-            title = track.displayAlbum,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.30f)
-                .blur(46.dp),
-            cornerRadius = 0.dp,
-            initialsSize = 80.sp,
-        )
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            TetherInk.copy(alpha = 0.42f),
-                            TetherInk.copy(alpha = 0.88f),
-                            TetherInk,
-                        ),
-                    ),
-                ),
-        )
-        Column(
+    TetherBackdrop(
+        artworkUri = track.artworkUri,
+        seed = track.albumKey + track.artist,
+        title = track.displayAlbum,
+        modifier = Modifier.fillMaxSize(),
+    ) {        Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -182,38 +166,58 @@ fun PlayerScreen(
                 title = "Now playing",
                 onBack = onBack,
                 actions = {
-                    IconButton(onClick = {
-                        viewModel.toggleFavorite(track)
-                    }) {
-                        Icon(
-                            if (favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            contentDescription = if (favorite) "Remove favorite" else "Add favorite",
-                            tint = if (favorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                    IconButton(onClick = { onTrackMenu(track) }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.onSurface)
-                    }
+                    TetherIconBubble(
+                        icon = if (favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = if (favorite) "Remove favorite" else "Add favorite",
+                        onClick = { viewModel.toggleFavorite(track) },
+                        size = 40.dp,
+                        content = if (favorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    TetherIconBubble(
+                        icon = Icons.Rounded.MoreVert,
+                        contentDescription = "More",
+                        onClick = { onTrackMenu(track) },
+                        size = 40.dp,
+                    )
                 },
             )
             Spacer(Modifier.height(8.dp))
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .padding(horizontal = 30.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Box {
+                Box(
+                    Modifier.shadow(
+                        elevation = 26.dp,
+                        shape = RoundedCornerShape(28.dp),
+                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.34f),
+                    ),
+                ) {
                     TetherCover(
                         artworkUri = track.artworkUri,
                         seed = track.albumKey + track.artist,
                         title = track.displayAlbum,
                         modifier = Modifier
+                            .widthIn(max = 310.dp)
                             .fillMaxWidth()
-                            .widthIn(max = 380.dp)
                             .aspectRatio(1f),
-                        cornerRadius = 26.dp,
+                        cornerRadius = 28.dp,
                         initialsSize = 64.sp,
+                    )
+                    TetherBadge(
+                        text = when (track.origin) {
+                            dev.tether.core.model.TrackOrigin.LOCAL -> "Local"
+                            dev.tether.core.model.TrackOrigin.DOWNLOADED -> "Offline"
+                            dev.tether.core.model.TrackOrigin.REMOTE -> "Stream"
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
+                        color = Color.White,
                     )
                     if (state.isBuffering) {
                         Box(
@@ -233,7 +237,7 @@ fun PlayerScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(18.dp))
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -243,62 +247,27 @@ fun PlayerScreen(
                 Column(Modifier.weight(1f)) {
                     Text(
                         track.displayTitle,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         track.displayArtist,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color(0xFFC7C3D8),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                IconButton(onClick = { if (track.album.isNotBlank()) onOpenAlbum(track.albumKey, track.displayAlbum, track.artworkUri) }) {
-                    Icon(
-                        Icons.Rounded.QueueMusic,
-                        contentDescription = "Open album",
-                        tint = Color(0xFFC7C3D8),
-                    )
-                }
-            }
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 28.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TetherBadge(
-                    when (track.origin) {
-                        dev.tether.core.model.TrackOrigin.LOCAL -> "LOCAL"
-                        dev.tether.core.model.TrackOrigin.DOWNLOADED -> "OFFLINE"
-                        dev.tether.core.model.TrackOrigin.REMOTE -> "STREAM"
-                    },
+                Spacer(Modifier.width(10.dp))
+                TetherIconBubble(
+                    icon = Icons.Rounded.Album,
+                    contentDescription = "Go to album",
+                    onClick = { if (track.album.isNotBlank()) onOpenAlbum(track.albumKey, track.displayAlbum, track.artworkUri) },
+                    size = 42.dp,
                 )
-                Text(
-                    when (track.origin) {
-                        dev.tether.core.model.TrackOrigin.LOCAL -> "On this device"
-                        dev.tether.core.model.TrackOrigin.DOWNLOADED -> "Offline copy"
-                        dev.tether.core.model.TrackOrigin.REMOTE -> track.sourceLabel
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFFA8A6BC),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (track.license?.isNotBlank() == true) {
-                    Text(
-                        "\u00b7 ${track.license}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFA8A6BC),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
             state.error?.let {
                 Text(
@@ -314,132 +283,186 @@ fun PlayerScreen(
                     modifier = Modifier.padding(horizontal = 18.dp),
                 ) { Text("Try again") }
             }
-            Column(Modifier.padding(horizontal = 22.dp, vertical = 3.dp)) {
-                Slider(
-                    value = scrub.coerceIn(0f, maxDuration),
-                    onValueChange = {
-                        dragging = true
-                        scrub = it
-                    },
-                    onValueChangeFinished = {
-                        playerViewModel.seekTo(scrub.toLong())
-                        dragging = false
-                    },
-                    valueRange = 0f..maxDuration,
-                )
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        formatDuration(if (dragging) scrub.toLong() else state.positionMs),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFA8A6BC),
-                    )
-                    Text(
-                        formatDuration(maxDuration.toLong()),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFA8A6BC),
-                    )
-                }
-            }
-            Row(
-                Modifier
+            TetherGlass(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(22.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
             ) {
-                IconButton(onClick = playerViewModel::toggleShuffle) {
-                    Icon(
-                        Icons.Rounded.Shuffle,
-                        contentDescription = "Shuffle",
-                        tint = if (state.shuffle) MaterialTheme.colorScheme.primary else Color(0xFFA8A6BC),
+                Column {
+                    val sliderColors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
                     )
-                }
-                IconButton(onClick = playerViewModel::previous, modifier = Modifier.size(54.dp)) {
-                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
-                }
-                Box(
-                    Modifier
-                        .size(76.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable(onClick = playerViewModel::togglePlayPause),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (state.isBuffering) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(30.dp),
-                            strokeWidth = 2.5.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                    Slider(
+                        value = scrub.coerceIn(0f, maxDuration),
+                        onValueChange = {
+                            dragging = true
+                            scrub = it
+                        },
+                        onValueChangeFinished = {
+                            playerViewModel.seekTo(scrub.toLong())
+                            dragging = false
+                        },
+                        valueRange = 0f..maxDuration,
+                        colors = sliderColors,
+                        thumb = {
+                            Box(
+                                Modifier
+                                    .size(14.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
+                            )
+                        },
+                        track = { sliderState ->
+                            SliderDefaults.Track(
+                                sliderState = sliderState,
+                                modifier = Modifier.height(5.dp),
+                                colors = sliderColors,
+                                drawStopIndicator = {},
+                            )
+                        },
+                    )
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            formatDuration(if (dragging) scrub.toLong() else state.positionMs),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    } else {
-                        Icon(
-                            if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (state.isPlaying) "Pause" else "Play",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(40.dp),
+                        Text(
+                            formatDuration(maxDuration.toLong()),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-                IconButton(onClick = playerViewModel::next, enabled = state.hasNext, modifier = Modifier.size(54.dp)) {
-                    Icon(
-                        Icons.Rounded.SkipNext,
-                        contentDescription = "Next",
-                        tint = if (state.hasNext) Color.White else Color(0xFF6C6980),
-                        modifier = Modifier.size(34.dp),
-                    )
-                }
-                IconButton(onClick = playerViewModel::cycleRepeat) {
-                    Icon(
-                        if (state.repeatMode == RepeatMode.ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                        contentDescription = "Repeat",
-                        tint = if (state.repeatMode != RepeatMode.OFF) MaterialTheme.colorScheme.primary else Color(0xFFA8A6BC),
-                    )
+            }
+            TetherGlass(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(34.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = playerViewModel::toggleShuffle) {
+                        Icon(
+                            Icons.Rounded.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(21.dp),
+                        )
+                    }
+                    IconButton(onClick = playerViewModel::previous, modifier = Modifier.size(52.dp)) {
+                        Icon(
+                            Icons.Rounded.SkipPrevious,
+                            contentDescription = "Previous",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary,
+                                    ),
+                                ),
+                            )
+                            .clickable(onClick = playerViewModel::togglePlayPause),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (state.isBuffering) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(30.dp),
+                                strokeWidth = 2.5.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Icon(
+                                if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (state.isPlaying) "Pause" else "Play",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(38.dp),
+                            )
+                        }
+                    }
+                    IconButton(onClick = playerViewModel::next, enabled = state.hasNext, modifier = Modifier.size(52.dp)) {
+                        Icon(
+                            Icons.Rounded.SkipNext,
+                            contentDescription = "Next",
+                            tint = if (state.hasNext) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+                    IconButton(onClick = playerViewModel::cycleRepeat) {
+                        Icon(
+                            if (state.repeatMode == RepeatMode.ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                            contentDescription = "Repeat",
+                            tint = if (state.repeatMode != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(21.dp),
+                        )
+                    }
                 }
             }
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 PlayerAction(
                     icon = Icons.Rounded.Subtitles,
                     label = "Lyrics",
                     onClick = onOpenLyrics,
+                    modifier = Modifier.weight(1f),
                 )
                 PlayerAction(
                     icon = Icons.Rounded.QueueMusic,
                     label = "Queue",
                     onClick = onOpenQueue,
+                    modifier = Modifier.weight(1f),
                 )
                 PlayerAction(
                     icon = Icons.Rounded.Timer,
                     label = if (state.sleepTimerActive) formatDuration(state.sleepRemainingMs) else "Sleep",
                     active = state.sleepTimerActive,
                     onClick = { showSleep = true },
+                    modifier = Modifier.weight(1f),
                 )
                 PlayerAction(
                     icon = Icons.Rounded.PlaylistAdd,
                     label = "Save",
                     onClick = { showSaveQueue = true },
+                    modifier = Modifier.weight(1f),
                 )
             }
             if (next != null) {
-                Surface(
+                TetherGlass(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(22.dp))
                         .clickable(onClick = onOpenQueue),
-                    color = Color.White.copy(alpha = 0.06f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    contentPadding = PaddingValues(10.dp),
                 ) {
                     Row(
-                        Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
@@ -447,37 +470,41 @@ fun PlayerScreen(
                             next.artworkUri,
                             next.albumKey + next.artist,
                             next.displayAlbum,
-                            Modifier.size(42.dp),
-                            cornerRadius = 9.dp,
+                            Modifier.size(44.dp),
+                            cornerRadius = 12.dp,
                             initialsSize = 13.sp,
                         )
                         Column(Modifier.weight(1f)) {
-                            Text("UP NEXT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                "UP NEXT",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 1.sp,
+                            )
                             Text(
                                 next.displayTitle,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
                                 next.displayArtist,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = Color(0xFFA8A6BC),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                             )
                         }
-                        Icon(Icons.Rounded.QueueMusic, contentDescription = null, tint = Color(0xFFA8A6BC))
+                        Icon(
+                            Icons.Rounded.QueueMusic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(21.dp),
+                        )
                     }
                 }
             }
-            Spacer(Modifier.height(18.dp))
-            TetherInfoBanner(
-                "Playback is managed by Tether's media service, so it survives screen changes and backgrounding. Nothing is uploaded.",
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                tone = MaterialTheme.colorScheme.secondary,
-            )
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(22.dp))
         }
     }
 
@@ -498,7 +525,7 @@ fun PlayerScreen(
             label = "Playlist name",
             initial = "Queue",
             confirmLabel = "Save playlist",
-            supportingText = "The current queue order is kept. Missing provider tracks remain in the playlist honestly.",
+            supportingText = "The current queue order is kept. Provider tracks that are unavailable stay in the list.",
             onDismiss = { showSaveQueue = false },
             onConfirm = { name ->
                 showSaveQueue = false
@@ -516,27 +543,35 @@ private fun PlayerAction(
     label: String,
     onClick: () -> Unit,
     active: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    TetherGlass(
+        modifier = modifier
+            .height(58.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        tone = if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else null,
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
     ) {
-        Icon(
-            icon,
-            contentDescription = label,
-            tint = if (active) MaterialTheme.colorScheme.primary else Color(0xFFC7C3D8),
-            modifier = Modifier.size(21.dp),
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (active) MaterialTheme.colorScheme.primary else Color(0xFFA8A6BC),
-            maxLines = 1,
-        )
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
+        ) {
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(21.dp),
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -605,27 +640,17 @@ fun QueueScreen(
         if (state.queue.isEmpty()) {
             TetherEmptyState(
                 title = "The queue is empty",
-                body = "Play a track or use a track menu to add music to the queue. The queue appears here and stays with the playback service.",
+                body = "Play a track or add music from a track menu to build a queue.",
                 icon = Icons.Rounded.QueueMusic,
                 showMark = false,
                 actionLabel = "Back",
                 onAction = onBack,
             )
         } else {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 30.dp)) {
-                item {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        TetherInfoBanner(
-                            "Tap a row to jump to it. Reordering never changes your playlists.",
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 30.dp),
+            ) {
                 items(state.queue, key = { it.id }) { track ->
                     val index = state.queue.indexOf(track)
                     val isCurrent = index == state.currentIndex
@@ -633,9 +658,11 @@ fun QueueScreen(
                         Row(
                             Modifier
                                 .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 2.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) else Color.Transparent)
                                 .clickable { playerViewModel.seekToIndex(index) }
-                                .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent)
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(11.dp),
                         ) {
@@ -796,33 +823,7 @@ fun LyricsScreen(
         lyricsState = viewModel.lyrics(track, force = reload > 0)
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TetherInk),
-    ) {
-        if (track != null) {
-            TetherCover(
-                track.artworkUri,
-                track.albumKey + track.artist,
-                track.displayAlbum,
-                Modifier
-                    .fillMaxSize()
-                    .alpha(0.16f)
-                    .blur(42.dp),
-                cornerRadius = 0.dp,
-                initialsSize = 70.sp,
-            )
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(TetherInk.copy(alpha = 0.64f), TetherInk, TetherInk),
-                        ),
-                    ),
-            )
-        }
+    Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             MobileTopBar(
                 title = "Lyrics",
@@ -830,13 +831,20 @@ fun LyricsScreen(
                 onBack = onBack,
                 actions = {
                     if (track != null) {
-                        IconButton(onClick = { importLauncher.launch(arrayOf("*/*")) }) {
-                            Icon(Icons.Rounded.Upload, contentDescription = "Import lyrics", tint = MaterialTheme.colorScheme.onSurface)
-                        }
+                        TetherIconBubble(
+                            icon = Icons.Rounded.Upload,
+                            contentDescription = "Import lyrics",
+                            onClick = { importLauncher.launch(arrayOf("*/*")) },
+                            size = 40.dp,
+                        )
                         if (lyricsState.state != LyricsLoadState.LOADING) {
-                            IconButton(onClick = { reload++ }) {
-                                Icon(Icons.Rounded.Refresh, contentDescription = "Reload lyrics", tint = MaterialTheme.colorScheme.onSurface)
-                            }
+                            Spacer(Modifier.width(8.dp))
+                            TetherIconBubble(
+                                icon = Icons.Rounded.Refresh,
+                                contentDescription = "Reload lyrics",
+                                onClick = { reload++ },
+                                size = 40.dp,
+                            )
                         }
                     }
                 },
@@ -844,7 +852,7 @@ fun LyricsScreen(
             if (track == null) {
                 TetherEmptyState(
                     title = "No track playing",
-                    body = "Start a track to look for lyrics. Tether never displays placeholder lyrics.",
+                    body = "Start a track to look for lyrics. Tether only shows lyrics a provider actually returned.",
                     icon = Icons.Rounded.Subtitles,
                     showMark = false,
                     actionLabel = "Back",
@@ -859,7 +867,7 @@ fun LyricsScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             CircularProgressIndicator(strokeWidth = 2.dp)
                             Text(
-                                "Looking for real lyrics\u2026",
+                                "Searching LRCLIB\u2026",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -878,13 +886,6 @@ fun LyricsScreen(
                         )
                     } else {
                         LyricsHeader(document)
-                        if (!document.synced) {
-                            TetherInfoBanner(
-                                "These are plain lyrics from ${document.sourceLabel}. They have no timestamps, so Tether will not pretend to scroll along with the song.",
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                                tone = MaterialTheme.colorScheme.secondary,
-                            )
-                        }
                         LyricsPane(
                             document = document,
                             positionMs = if (document.synced) state.positionMs else 0L,
@@ -893,7 +894,7 @@ fun LyricsScreen(
                                 .padding(top = 4.dp),
                             textSize = if (document.synced) 20.sp else 19.sp,
                             activeColor = MaterialTheme.colorScheme.primary,
-                            inactiveColor = Color(0xFFA8A6BC),
+                            inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             contentPadding = PaddingValues(horizontal = 22.dp, vertical = 26.dp),
                             onSeek = if (document.synced) {
                                 { position -> playerViewModel.seekTo(position) }
@@ -908,10 +909,17 @@ fun LyricsScreen(
                         TetherEmptyState(
                             title = when (lyricsState.state) {
                                 LyricsLoadState.OFFLINE -> "Lyrics unavailable offline"
-                                LyricsLoadState.ERROR -> "Lyrics lookup failed"
+                                LyricsLoadState.ERROR -> "Couldn't load lyrics"
                                 else -> "No lyrics found"
                             },
-                            body = lyricsState.message ?: "Tether could not find lyrics for this track.",
+                            body = when (lyricsState.state) {
+                                LyricsLoadState.OFFLINE ->
+                                    "Connect to the internet to search LRCLIB, or import a local .lrc file."
+                                LyricsLoadState.ERROR ->
+                                    "Tether couldn't reach LRCLIB. Try again in a moment."
+                                else ->
+                                    "No lyrics are available for this track yet. You can import an .lrc or .txt file."
+                            },
                             icon = Icons.Rounded.Subtitles,
                             showMark = false,
                             actionLabel = "Try again",

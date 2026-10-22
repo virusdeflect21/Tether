@@ -95,7 +95,7 @@ fun TvPlaylistsScreen(
     Column(Modifier.fillMaxSize().padding(horizontal = 38.dp, vertical = 30.dp)) {
         TvScreenHeader(
             title = "Playlists",
-            subtitle = if (playlists.isEmpty()) "Build collections that stay in sync with Tether Mobile." else "${playlists.size} playlists",
+            subtitle = if (playlists.isEmpty()) "Build collections on this TV." else "${playlists.size} playlists",
             trailing = {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     TvButton("Import M3U", { importLauncher.launch(arrayOf("audio/x-mpegurl", "text/plain", "application/octet-stream")) }, icon = Icons.Rounded.Upload)
@@ -113,7 +113,7 @@ fun TvPlaylistsScreen(
         if (playlists.isEmpty()) {
             TvEmptyState(
                 title = "No playlists yet",
-                body = "Create a playlist on the TV, or import an M3U file. Playlists use real tracks from your shared library.",
+                body = "Create a playlist on the TV, or import an M3U file. Playlists use tracks from this TV's library.",
                 action = {
                     TvButton("Create a playlist", { showCreate = true }, icon = Icons.Rounded.Add, primary = true)
                 },
@@ -507,7 +507,7 @@ fun TvSettingsScreen(
     Column(Modifier.fillMaxSize().padding(horizontal = 38.dp, vertical = 30.dp)) {
         TvScreenHeader(
             title = "Settings",
-            subtitle = "Shared preferences with Tether Mobile · ${mediaFolders.size} saved folders",
+            subtitle = "Tether TV settings · ${mediaFolders.size} saved folders",
         )
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -525,7 +525,7 @@ fun TvSettingsScreen(
                     TvSettingsSection("Theme") {
                         TvChoiceRow(
                             title = "Color mode",
-                            subtitle = "The shared Tether theme. System follows the TV's dark theme.",
+                            subtitle = "The Tether theme. System follows the TV's dark theme.",
                             options = ThemeMode.entries.map { it.name to it.label() },
                             selected = settings.themeMode.name,
                             onSelect = { viewModel.setThemeMode(ThemeMode.valueOf(it)) },
@@ -629,8 +629,8 @@ fun TvSettingsScreen(
                 item {
                     TvSettingsSection("Playback") {
                         TvToggleRow(
-                            title = "Scan MediaStore at startup",
-                            subtitle = "Indexes audio visible through Android media permission. Nothing is uploaded.",
+                            title = "Scan for music at startup",
+                            subtitle = "Look for new audio on this device. Nothing is uploaded.",
                             checked = settings.scanMediaStoreOnStartup,
                             onToggle = { viewModel.setScanOnStartup(!settings.scanMediaStoreOnStartup) },
                         )
@@ -645,7 +645,7 @@ fun TvSettingsScreen(
                     TvSettingsSection("Music sources") {
                         TvActionRow(
                             title = if (hasAudioPermission) "Device music access granted" else "Allow device music access",
-                            subtitle = if (hasAudioPermission) "MediaStore scanning is allowed." else "Request Android media audio permission. Folder picks still work without it.",
+                            subtitle = if (hasAudioPermission) "Tether can scan music on this device." else "Allow music access so Tether can find audio on this device. Folder picks still work without it.",
                             onClick = if (hasAudioPermission) null else onRequestPermission,
                             focusRequester = firstFocus,
                         )
@@ -661,7 +661,7 @@ fun TvSettingsScreen(
                         )
                         TvActionRow(
                             title = "Rescan device audio",
-                            subtitle = "Refresh the index. Playlists and favorites stay intact.",
+                            subtitle = "Look for new or removed music. Playlists and favorites stay intact.",
                             onClick = if (hasAudioPermission) viewModel::scanMediaStore else onRequestPermission,
                         )
                     }
@@ -714,15 +714,15 @@ fun TvSettingsScreen(
                             focusRequester = firstFocus,
                         )
                         TvActionRow(
-                            title = "Tether TV 1.0.0",
-                            subtitle = "Separate TV app · shared library and playback engine",
+                            title = "Tether TV ${BuildConfig.VERSION_NAME}",
+                            subtitle = "A separate app for the big screen",
                         )
                     }
                 }
                 item {
                     TvSettingsSection("Privacy") {
                         Text(
-                            "No account, no advertising ID, no analytics. Library scanning and playback happen on this device. Network calls happen only for online discovery, lyrics you request and downloads whose licenses allow them.",
+                            "No account, no advertising ID, no analytics. Your library stays on this device. Tether goes online only for discovery, lyrics, and downloads you start.",
                             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 23.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(16.dp),
@@ -925,7 +925,7 @@ fun TvAboutScreen(onBack: () -> Unit) {
                 Column {
                     TetherWordmark(titleSize = 30)
                     Text(
-                        "Tether TV 1.0.0",
+                        "Tether TV ${BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -934,16 +934,16 @@ fun TvAboutScreen(onBack: () -> Unit) {
         }
         item {
             Text(
-                "Tether is a local-first music player for the music you own and for openly licensed music you choose to explore. It does not require an account and has no ads or analytics.",
+                "Tether plays the music you own and independent music shared under Creative Commons. No account, no ads, no analytics.",
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 28.sp),
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
         item {
-            TvAboutPoint("Honest playback", "The TV app controls the same media session as Tether Mobile. Audio continues when Cover, Lyrics or Video changes.")
-            TvAboutPoint("Real providers", "ccMixter supplies Creative Commons discovery. LRCLIB supplies lyrics. If a service is unavailable, Tether says so instead of inventing a result.")
-            TvAboutPoint("Licensed downloads", "A remote track can be downloaded only when its provider confirms permission and supplies a real file. Attribution and license data stay with the track.")
-            TvAboutPoint("Local files", "SAF folders and device audio are read from local storage. They cannot be downloaded and are never uploaded.")
+            TvAboutPoint("Three ways to listen", "Cover, lyrics, and video share the same audio session, so switching modes never restarts the song.")
+            TvAboutPoint("Open discovery", "Find Creative Commons music from ccMixter and lyrics from LRCLIB. If a service is down, Tether says so.")
+            TvAboutPoint("Downloads you can trust", "Tether saves a track only when its license allows it and the artist provides a file. Attribution stays with the track.")
+            TvAboutPoint("Your files stay local", "Music from your device and chosen folders is never uploaded.")
         }
         item {
             TvFocusable(
@@ -968,7 +968,7 @@ fun TvAboutScreen(onBack: () -> Unit) {
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                "AndroidX and Jetpack Compose · Apache 2.0\nMedia3 / ExoPlayer · Apache 2.0\nRoom, DataStore, WorkManager · Apache 2.0\nKotlin and kotlinx.coroutines · Apache 2.0\nOkHttp · Apache 2.0\nCoil · Apache 2.0",
+                "AndroidX and Jetpack Compose · Apache 2.0\nMedia3 / ExoPlayer · Apache 2.0\nRoom, DataStore, WorkManager · Apache 2.0\nKotlin and kotlinx.coroutines · Apache 2.0\nOkHttp · Apache 2.0\nCoil · Apache 2.0\nPoppins typeface · SIL Open Font License 1.1",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp),
@@ -976,7 +976,7 @@ fun TvAboutScreen(onBack: () -> Unit) {
         }
         item {
             Text(
-                "Tether is licensed under the Apache License, Version 2.0. Provider catalogs and their content remain under their own licenses. No code or brand assets from other music players are included.",
+                "Tether is licensed under the MIT License. Provider catalogs and their content remain under their own licenses. No code or brand assets from other music players are included.",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

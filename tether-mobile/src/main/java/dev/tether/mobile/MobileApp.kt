@@ -27,7 +27,6 @@ import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,7 +50,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.tether.core.design.TetherBackdrop
 import dev.tether.core.design.TetherMark
+import dev.tether.core.design.TetherSnackbarHost
 import dev.tether.core.design.TetherTheme
 import dev.tether.core.design.TetherWordmark
 import dev.tether.core.model.AlbumSummary
@@ -207,7 +208,7 @@ fun TetherMobileRoot(
                     mobileViewModel.markOnboardingComplete()
                 },
             )
-            SnackbarHost(
+            TetherSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -275,10 +276,11 @@ fun TetherMobileRoot(
 
         BackHandler(enabled = stack.size > 1) { pop() }
 
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+        TetherBackdrop(
+            artworkUri = playerState.currentTrack?.artworkUri,
+            seed = playerState.currentTrack?.let { it.albumKey + it.artist } ?: "tether",
+            title = playerState.currentTrack?.displayAlbum ?: "Tether",
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f)) {
@@ -455,15 +457,16 @@ fun TetherMobileRoot(
                     current !is MobileDestination.Player &&
                     current !is MobileDestination.Queue &&
                     current !is MobileDestination.Lyrics
+                val showBottom = current.isRootTab()
                 if (showMini) {
                     MiniPlayer(
                         state = playerState,
                         onOpen = { push(MobileDestination.Player) },
                         onPlayPause = playerViewModel::togglePlayPause,
                         onNext = playerViewModel::next,
+                        modifier = if (showBottom) Modifier else Modifier.navigationBarsPadding(),
                     )
                 }
-                val showBottom = current.isRootTab()
                 if (showBottom) {
                     TetherBottomBar(
                         items = listOf(
@@ -501,7 +504,7 @@ fun TetherMobileRoot(
                     )
                 }
             }
-            SnackbarHost(
+            TetherSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -575,14 +578,13 @@ fun TetherMobileRoot(
 
 @Composable
 private fun LoadingSplash() {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            TetherMark(82.dp)
+    TetherBackdrop(modifier = Modifier.fillMaxSize()) {
+        Column(
+            Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            TetherMark(82.dp, cornerRadius = 24.dp)
             TetherWordmark(titleSize = 30)
             CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
             Text(

@@ -60,14 +60,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.tether.core.design.TetherChip
 import dev.tether.core.design.TetherCover
 import dev.tether.core.design.TetherEmptyState
+import dev.tether.core.design.TetherGlass
+import dev.tether.core.design.TetherIconBubble
 import dev.tether.core.design.TetherInfoBanner
 import dev.tether.core.design.TetherOutlineButton
 import dev.tether.core.design.TetherPrimaryButton
@@ -135,15 +139,17 @@ fun LibraryScreen(
                 "Your local files and downloads"
             },
             actions = {
-                IconButton(onClick = onOpenSearch) {
-                    Icon(Icons.Rounded.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurface)
-                }
+                TetherIconBubble(
+                    icon = Icons.Rounded.Search,
+                    contentDescription = "Search",
+                    onClick = onOpenSearch,
+                    size = 40.dp,
+                )
             },
         )
-        FilterChips(
-            options = LibraryTab.entries.map { it.key to it.label },
-            selected = tabKey,
-            onSelect = { tabKey = it },
+        LibraryTabs(
+            selected = tab,
+            onSelect = { tabKey = it.key },
             modifier = Modifier.padding(bottom = 6.dp),
         )
         LazyColumn(
@@ -161,7 +167,6 @@ fun LibraryScreen(
                     onImportFiles = onImportFiles,
                     onManageFolders = { showFolders = true },
                     lastScanAt = settings.lastScanAt,
-                    folderCount = mediaFolders.size,
                 )
             }
             when (tab) {
@@ -335,6 +340,64 @@ private fun LibrarySort.label(): String = when (this) {
 }
 
 @Composable
+private fun LibraryTabs(
+    selected: LibraryTab,
+    onSelect: (LibraryTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        LibraryTab.entries.forEach { tab ->
+            val active = tab == selected
+            val base = Modifier
+                .weight(1f)
+                .height(36.dp)
+                .clip(CircleShape)
+                .clickable { onSelect(tab) }
+            if (active) {
+                Box(
+                    base.background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary,
+                            ),
+                        ),
+                    ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        tab.label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        maxLines = 1,
+                    )
+                }
+            } else {
+                TetherGlass(
+                    modifier = base,
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp),
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            tab.label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun LibraryToolbar(
     hasAudioPermission: Boolean,
     scanning: Boolean,
@@ -344,16 +407,16 @@ private fun LibraryToolbar(
     onImportFiles: () -> Unit,
     onManageFolders: () -> Unit,
     lastScanAt: Long,
-    folderCount: Int,
 ) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (!hasAudioPermission) {
-            Surface(
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(14.dp),
+            TetherGlass(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                tone = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 11.dp),
             ) {
                 Row(
-                    Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -384,15 +447,15 @@ private fun LibraryToolbar(
             }
         }
         Row(
-            Modifier.horizontalScroll(rememberScrollState()),
+            Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            SmallActionChip(Icons.Rounded.Refresh, "Scan device", onClick = {
+            LibraryAction(Icons.Rounded.Refresh, "Scan", Modifier.weight(1f)) {
                 if (hasAudioPermission) onScan() else onRequestPermission()
-            })
-            SmallActionChip(Icons.Rounded.Folder, "Add folder", onClick = onAddFolder)
-            SmallActionChip(Icons.Rounded.Add, "Import files", onClick = onImportFiles)
-            SmallActionChip(Icons.Rounded.LibraryMusic, "Folders ($folderCount)", onClick = onManageFolders)
+            }
+            LibraryAction(Icons.Rounded.Folder, "Add folder", Modifier.weight(1f), onAddFolder)
+            LibraryAction(Icons.Rounded.Add, "Import", Modifier.weight(1f), onImportFiles)
+            LibraryAction(Icons.Rounded.LibraryMusic, "Manage", Modifier.weight(1f), onManageFolders)
         }
         if (lastScanAt > 0) {
             Text(
@@ -405,18 +468,39 @@ private fun LibraryToolbar(
 }
 
 @Composable
-private fun SmallActionChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun LibraryAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    TetherGlass(
+        modifier = modifier
+            .height(56.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        contentPadding = PaddingValues(4.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(15.dp))
-        Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -424,7 +508,7 @@ private fun SmallActionChip(icon: androidx.compose.ui.graphics.vector.ImageVecto
 private fun AlbumGridTile(album: AlbumSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
     ) {
         TetherCover(
@@ -434,10 +518,10 @@ private fun AlbumGridTile(album: AlbumSummary, onClick: () -> Unit, modifier: Mo
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f),
-            cornerRadius = 16.dp,
+            cornerRadius = 22.dp,
             initialsSize = 30.sp,
         )
-        Spacer(Modifier.height(7.dp))
+        Spacer(Modifier.height(9.dp))
         Text(
             album.title,
             style = MaterialTheme.typography.titleMedium,
@@ -459,7 +543,7 @@ private fun AlbumGridTile(album: AlbumSummary, onClick: () -> Unit, modifier: Mo
 private fun ArtistGridTile(artist: ArtistSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -473,7 +557,7 @@ private fun ArtistGridTile(artist: ArtistSummary, onClick: () -> Unit, modifier:
             cornerRadius = 100.dp,
             initialsSize = 26.sp,
         )
-        Spacer(Modifier.height(7.dp))
+        Spacer(Modifier.height(9.dp))
         Text(
             artist.name,
             style = MaterialTheme.typography.titleMedium,
@@ -491,41 +575,44 @@ private fun ArtistGridTile(artist: ArtistSummary, onClick: () -> Unit, modifier:
 
 @Composable
 private fun FolderListRow(name: String, count: Int, onClick: () -> Unit) {
-    Row(
-        Modifier
+    TetherGlass(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 13.dp),
     ) {
-        Box(
-            Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
-            Icon(Icons.Rounded.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            Box(
+                Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Rounded.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    "$count track${if (count == 1) "" else "s"}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(Icons.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
-        Column(Modifier.weight(1f)) {
-            Text(
-                name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                "$count track${if (count == 1) "" else "s"}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Icon(Icons.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
     }
 }
 

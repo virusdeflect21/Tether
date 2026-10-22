@@ -102,34 +102,32 @@ fun TvHomeScreen(
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         item {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
+            Column(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
                     Text(
                         greeting,
                         style = MaterialTheme.typography.headlineMedium.copy(fontSize = 26.sp),
                         color = MaterialTheme.colorScheme.primary,
                     )
-                    Text(
-                        "Your music, on your screen.",
-                        style = MaterialTheme.typography.displayMedium.copy(fontSize = 38.sp, lineHeight = 44.sp),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (stats.trackCount > 0) {
                         Text(
-                            "${stats.trackCount} tracks  ·  ${stats.albumCount} albums",
+                            "${stats.trackCount} tracks · ${stats.albumCount} albums",
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
                         )
                     }
-                    TvButton("Search", onOpenSearch, icon = Icons.Rounded.Search)
                 }
+                Text(
+                    "Your music, on your screen.",
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 38.sp, lineHeight = 44.sp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                )
             }
             Spacer(Modifier.height(22.dp))
         }
@@ -496,7 +494,7 @@ fun TvLibraryScreen(
                             if (favorites.isEmpty()) {
                                 TvEmptyState(
                                     title = "No favorites yet",
-                                    body = "Add tracks to favorites from Now Playing. Favorites are shared with the Tether Mobile app.",
+                                    body = "Add tracks to favorites from Now Playing.",
                                 )
                             } else {
                                 TvTrackList(

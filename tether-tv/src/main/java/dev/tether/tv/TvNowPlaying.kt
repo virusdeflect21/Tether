@@ -151,7 +151,7 @@ fun TvNowPlayingScreen(
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             TvEmptyState(
                 title = "Nothing playing",
-                body = "Choose a track from Home, Library or Search. Tether TV uses the same playback session as the mobile app.",
+                body = "Choose a track from Home, Library, or Search.",
                 action = { TvButton("Back", onBack, primary = true) },
             )
         }
@@ -426,7 +426,7 @@ private fun CoverMode(
                 modifier = Modifier.padding(top = 4.dp),
             )
             Text(
-                track.displayAlbum + if (track.year != null) " В· ${track.year}" else "",
+                track.displayAlbum + if (track.year != null) " · ${track.year}" else "",
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp),
                 color = Color(0xFF9C9AAF),
                 maxLines = 1,
@@ -499,7 +499,7 @@ private fun LyricsMode(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                            Text("Looking for real lyricsвЂ¦", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
+                            Text("Looking for real lyrics…", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                         }
                     }
                 }
@@ -645,7 +645,7 @@ private fun VideoMode(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "Attach a local video file you own. Audio continues from the Tether media session, and the video plays muted and synchronized.",
+                    "Attach a local video file you own. Tether keeps playing the audio and shows the video muted and in sync.",
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.width(500.dp).padding(top = 5.dp),
@@ -684,7 +684,7 @@ private fun VideoMode(
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Video is muted. Audio comes from the shared Tether player, so switching modes never restarts the song.",
+                    "Video is muted. Audio comes from Tether's player, so switching modes never restarts the song.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -2,9 +2,9 @@ package dev.tether.core.design
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,9 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.SubcomposeAsyncImageContent
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlin.math.abs
@@ -53,6 +51,8 @@ private fun paletteFor(seed: String): List<Color> {
 /**
  * Album artwork with a deterministic generative fallback. The fallback uses only
  * the track's own identity, so the same album keeps the same cover everywhere.
+ * Covers are treated as physical objects: a clipped sheen edge keeps the artwork
+ * from dissolving into the glass surfaces around it.
  */
 @Composable
 fun TetherCover(
@@ -64,10 +64,16 @@ fun TetherCover(
     initialsSize: TextUnit = 28.sp,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
+    val edge = if (cornerRadius > 0.dp) {
+        Modifier.border(1.dp, Color.White.copy(alpha = 0.13f), shape)
+    } else {
+        Modifier
+    }
     Box(
         modifier
             .clip(shape)
-            .background(if (artworkUri.isNullOrBlank()) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant),
+            .background(if (artworkUri.isNullOrBlank()) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant)
+            .then(edge),
     ) {
         if (artworkUri.isNullOrBlank()) {
             GeneratedCover(seed, title, initialsSize)
@@ -90,10 +96,10 @@ fun TetherCover(
 @Composable
 private fun GeneratedCover(seed: String, title: String, initialsSize: TextUnit) {
     val palette = remember(seed) { paletteFor(seed) }
-    val initials = remember(title) {
-        title.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.take(2)
+    val monogram = remember(title) {
+        title.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.take(1)
             .joinToString("") { it.take(1).uppercase() }
-            .ifBlank { "♪" }
+            .ifBlank { "\u266a" }
     }
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
@@ -105,49 +111,60 @@ private fun GeneratedCover(seed: String, title: String, initialsSize: TextUnit) 
                 ),
             )
             drawCircle(
-                color = Color.White.copy(alpha = 0.08f),
-                radius = size.minDimension * 0.52f,
-                center = Offset(size.width * 0.82f, size.height * 0.18f),
-                style = Stroke(width = size.minDimension * 0.05f),
+                brush = Brush.radialGradient(
+                    listOf(Color.White.copy(alpha = 0.24f), Color.Transparent),
+                    center = Offset(size.width * 0.78f, size.height * 0.16f),
+                    radius = size.minDimension * 0.62f,
+                ),
+                radius = size.minDimension * 0.62f,
+                center = Offset(size.width * 0.78f, size.height * 0.16f),
             )
             drawCircle(
-                color = Color.White.copy(alpha = 0.06f),
-                radius = size.minDimension * 0.34f,
-                center = Offset(size.width * 0.18f, size.height * 0.86f),
+                color = Color.Black.copy(alpha = 0.14f),
+                radius = size.minDimension * 0.47f,
+                center = Offset(size.width * 0.18f, size.height * 0.92f),
             )
-            drawArc(
-                color = Color.White.copy(alpha = 0.16f),
-                startAngle = 205f,
-                sweepAngle = 108f,
-                useCenter = false,
-                topLeft = Offset(size.width * 0.22f, size.height * 0.20f),
-                size = Size(size.width * 0.72f, size.height * 0.72f),
-                style = Stroke(width = size.minDimension * 0.012f, cap = StrokeCap.Round),
-            )
+            listOf(0.56f, 0.68f, 0.80f).forEachIndexed { index, fraction ->
+                drawArc(
+                    color = Color.White.copy(alpha = 0.10f + index * 0.025f),
+                    startAngle = 200f,
+                    sweepAngle = 118f,
+                    useCenter = false,
+                    topLeft = Offset(
+                        size.width * (0.5f - fraction / 2f),
+                        size.height * (0.5f - fraction / 2f),
+                    ),
+                    size = Size(size.width * fraction, size.height * fraction),
+                    style = Stroke(width = size.minDimension * 0.008f, cap = StrokeCap.Round),
+                )
+            }
+            for (index in 0 until 7) {
+                val x = size.width * (0.12f + index * 0.13f)
+                val amplitude = size.height * (0.035f + (index % 3) * 0.022f)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.16f),
+                    start = Offset(x, size.height * 0.78f - amplitude),
+                    end = Offset(x, size.height * 0.78f + amplitude),
+                    strokeWidth = size.minDimension * 0.012f,
+                    cap = StrokeCap.Round,
+                )
+            }
             drawLine(
                 color = Color.White.copy(alpha = 0.22f),
-                start = Offset(size.width * 0.16f, size.height * 0.72f),
-                end = Offset(size.width * 0.84f, size.height * 0.30f),
-                strokeWidth = size.minDimension * 0.008f,
+                start = Offset(size.width * 0.14f, size.height * 0.66f),
+                end = Offset(size.width * 0.86f, size.height * 0.22f),
+                strokeWidth = size.minDimension * 0.006f,
                 cap = StrokeCap.Round,
             )
         }
         Text(
-            text = initials,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(sizePadding(initialsSize)),
-            color = Color.White.copy(alpha = 0.92f),
-            fontSize = initialsSize,
-            lineHeight = initialsSize,
+            text = monogram,
+            modifier = Modifier.align(Alignment.Center),
+            color = Color.White.copy(alpha = 0.18f),
+            fontSize = initialsSize * 2.1f,
+            lineHeight = initialsSize * 2.1f,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
         )
     }
-}
-
-private fun sizePadding(size: TextUnit): Dp = when {
-    size.value >= 40f -> 20.dp
-    size.value >= 24f -> 14.dp
-    else -> 10.dp
 }

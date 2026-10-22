@@ -91,16 +91,20 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         autoScanned = true
-        scanMediaStore()
+        scanMediaStoreInternal(showSummary = false)
     }
 
     fun scanMediaStore() {
+        scanMediaStoreInternal(showSummary = true)
+    }
+
+    private fun scanMediaStoreInternal(showSummary: Boolean) {
         if (_scanning.value) return
         viewModelScope.launch {
             _scanning.value = true
             val result = graph.library.scanMediaStore()
             _scanning.value = false
-            announceScan(result)
+            if (showSummary) announceScan(result)
             refreshStats()
         }
     }

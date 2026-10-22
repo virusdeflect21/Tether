@@ -124,16 +124,16 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
         }
         if (!hasPermission) return
         pendingAutoScan = false
-        scanMediaStore()
+        scanMediaStore(showSummary = false)
     }
 
-    fun scanMediaStore() {
+    fun scanMediaStore(showSummary: Boolean = true) {
         if (_scanning.value) return
         _scanning.value = true
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { graph.library.scanMediaStore() }
             _scanning.value = false
-            publishScan(result)
+            publishScan(result, showSummary)
             refreshStats()
             refreshStorage()
         }
@@ -182,10 +182,10 @@ class MobileViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun publishScan(result: ScanResult) {
+    private fun publishScan(result: ScanResult, showSummary: Boolean = true) {
         if (result.errors.isNotEmpty()) {
             notify(result.errors.first())
-        } else {
+        } else if (showSummary) {
             notify(result.summary)
         }
     }

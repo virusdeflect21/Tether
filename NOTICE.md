@@ -14,8 +14,9 @@ Tether is built with open-source Android and Kotlin libraries. The main componen
 | Coil | Image loading | Apache License 2.0 |
 | Palette | Artwork color extraction | Apache License 2.0 |
 | Material Icons | UI icons | Apache License 2.0 |
+| Poppins | Bundled UI typeface | SIL Open Font License 1.1 |
 
-The full dependency set and exact versions are declared in `gradle/libs.versions.toml` and the module `build.gradle.kts` files. Transitive dependencies are distributed under their respective licenses; their license files are packaged with the APK where required.
+The full dependency set and exact versions are declared in `gradle/libs.versions.toml` and the module `build.gradle.kts` files. Transitive dependencies are distributed under their respective licenses; their license files are packaged with the APK where required. The full Poppins license text is included at `licenses/Poppins-OFL.txt`.
 
 ## Services
 

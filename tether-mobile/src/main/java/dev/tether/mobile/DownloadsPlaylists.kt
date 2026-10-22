@@ -62,7 +62,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tether.core.design.TetherCover
 import dev.tether.core.design.TetherEmptyState
-import dev.tether.core.design.TetherInfoBanner
+import dev.tether.core.design.TetherGlass
+import dev.tether.core.design.TetherIconBubble
 import dev.tether.core.design.TetherOutlineButton
 import dev.tether.core.design.TetherPrimaryButton
 import dev.tether.core.design.TetherSectionHeader
@@ -98,15 +99,18 @@ fun DownloadsScreen(
         MobileTopBar(
             title = "Downloads",
             subtitle = if (completed.isEmpty()) {
-                "Offline copies you explicitly asked for"
+                "Saved music, available offline"
             } else {
                 "${completed.size} offline \u00b7 ${formatBytes(completed.sumOf { it.totalBytes })}"
             },
             actions = {
                 Box {
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = "Download options", tint = MaterialTheme.colorScheme.onSurface)
-                    }
+                    TetherIconBubble(
+                        icon = Icons.Rounded.MoreVert,
+                        contentDescription = "Download options",
+                        onClick = { showMenu = true },
+                        size = 40.dp,
+                    )
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                         DropdownMenuItem(
                             text = { Text("Pause all active") },
@@ -160,9 +164,9 @@ fun DownloadsScreen(
             if (downloads.isEmpty()) {
                 item {
                     TetherEmptyState(
-                        title = "Nothing downloaded yet",
-                        body = "Only tracks whose source explicitly permits downloads can be saved. Explore Creative Commons music, open a track's menu, and choose Download. Tether never downloads a stream behind your back.",
-                        actionLabel = "Explore openly licensed music",
+                        title = "No downloads yet",
+                        body = "Save music from providers that allow downloads. Offline copies stay in Tether's private storage.",
+                        actionLabel = "Find music to download",
                         onAction = onOpenExplore,
                         icon = Icons.Rounded.CloudDownload,
                         showMark = false,
@@ -234,20 +238,6 @@ fun DownloadsScreen(
                     )
                 }
             }
-            item {
-                Column(Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
-                    TetherInfoBanner(
-                        "Completed downloads live in app-managed storage and stay inside Tether. Each file keeps a license and attribution sidecar. Deleting a copy returns remote tracks to streaming when the provider still supplies them.",
-                        tone = MaterialTheme.colorScheme.secondary,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Artwork cache: ${formatBytes(storage.artworkBytes)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
         }
     }
 }
@@ -270,12 +260,12 @@ private fun StorageCard(
     completedCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    TetherGlass(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
+        contentPadding = PaddingValues(16.dp),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp)) {
                 Box(
                     Modifier
@@ -289,7 +279,7 @@ private fun StorageCard(
                 Column(Modifier.weight(1f)) {
                     Text("On-device storage", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                     Text(
-                        "Music/Tether downloads \u00b7 private app storage",
+                        "Tether's private app storage",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -528,11 +518,14 @@ fun PlaylistsScreen(
     Column(Modifier.fillMaxSize()) {
         MobileTopBar(
             title = "Playlists",
-            subtitle = if (playlists.isEmpty()) "Your own order, your own rules" else "${stats.playlistCount} playlist${if (stats.playlistCount == 1) "" else "s"}",
+            subtitle = if (playlists.isEmpty()) "Your saved collections" else "${stats.playlistCount} playlist${if (stats.playlistCount == 1) "" else "s"}",
             actions = {
-                IconButton(onClick = { showCreate = true }) {
-                    Icon(Icons.Rounded.Add, contentDescription = "Create playlist", tint = MaterialTheme.colorScheme.onSurface)
-                }
+                TetherIconBubble(
+                    icon = Icons.Rounded.Add,
+                    contentDescription = "Create playlist",
+                    onClick = { showCreate = true },
+                    size = 40.dp,
+                )
             },
         )
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 30.dp)) {
@@ -546,18 +539,12 @@ fun PlaylistsScreen(
                     TetherPrimaryButton("New playlist", { showCreate = true }, icon = Icons.Rounded.PlaylistAdd)
                     TetherOutlineButton("Import M3U", onImportM3u, icon = Icons.Rounded.Upload)
                 }
-                Text(
-                    "Playlists can include local tracks, offline copies and provider tracks. Missing tracks are dropped honestly when a backup or M3U cannot be matched.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                )
             }
             if (playlists.isEmpty()) {
                 item {
                     TetherEmptyState(
                         title = "No playlists yet",
-                        body = "Create one here, save the play queue from the player, or import an M3U file that points at music in your library.",
+                        body = "Create a collection here, save the queue from the player, or import an M3U file.",
                         actionLabel = "Create playlist",
                         onAction = { showCreate = true },
                         icon = Icons.Rounded.PlaylistAdd,
@@ -601,47 +588,50 @@ private fun PlaylistManageRow(
     var menuOpen by remember { mutableStateOf(false) }
     var renameOpen by remember { mutableStateOf(false) }
     var deleteOpen by remember { mutableStateOf(false) }
-    Row(
-        Modifier
+    TetherGlass(
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onOpen)
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onOpen),
+        shape = RoundedCornerShape(20.dp),
+        contentPadding = PaddingValues(8.dp),
     ) {
-        TetherCover(
-            playlist.coverArtUri,
-            "playlist:${playlist.id}:${playlist.name}",
-            playlist.name,
-            Modifier.size(58.dp),
-            cornerRadius = 13.dp,
-            initialsSize = 19.sp,
-        )
-        Column(Modifier.weight(1f)) {
-            Text(playlist.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                "${playlist.trackCount} track${if (playlist.trackCount == 1) "" else "s"}" +
-                    if (playlist.updatedAt > 0) " \u00b7 ${formatDate(playlist.updatedAt)}" else "",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp),
+        ) {
+            TetherCover(
+                playlist.coverArtUri,
+                "playlist:${playlist.id}:${playlist.name}",
+                playlist.name,
+                Modifier.size(58.dp),
+                cornerRadius = 14.dp,
+                initialsSize = 19.sp,
             )
-            if (playlist.description.isNotBlank()) {
+            Column(Modifier.weight(1f)) {
+                Text(playlist.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    playlist.description,
-                    style = MaterialTheme.typography.labelMedium,
+                    "${playlist.trackCount} track${if (playlist.trackCount == 1) "" else "s"}" +
+                        if (playlist.updatedAt > 0) " \u00b7 ${formatDate(playlist.updatedAt)}" else "",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
+                if (playlist.description.isNotBlank()) {
+                    Text(
+                        playlist.description,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-        }
-        Box {
-            IconButton(onClick = { menuOpen = true }) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "Playlist options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            Box {
+                IconButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Playlist options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
                     text = { Text("Rename") },
                     onClick = {
@@ -657,7 +647,8 @@ private fun PlaylistManageRow(
                         deleteOpen = true
                     },
                     leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                )
+                    )
+                }
             }
         }
     }
@@ -864,12 +855,6 @@ fun PlaylistDetailScreen(
                             entryMenuId = null
                             removeEntry = entry
                         },
-                    )
-                }
-                item {
-                    TetherInfoBanner(
-                        "Playlist rows are ordered explicitly. Missing provider tracks remain listed until you remove them; Tether will not substitute an unrelated stream.",
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
                     )
                 }
             }
