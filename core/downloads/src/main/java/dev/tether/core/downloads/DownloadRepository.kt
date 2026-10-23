@@ -90,7 +90,9 @@ class DownloadRepository(
             if (!permission.allowed) {
                 return@withContext DownloadActionResult(ok = false, message = permission.reason)
             }
-            val url = track.remoteUri ?: track.uri
+            // Signed provider URLs expire, so fetch a fresh one right before transferring.
+            val source = runCatching { providers.resolveStream(track) }.getOrDefault(track)
+            val url = source.remoteUri ?: source.uri
             if (url == null || !(url.startsWith("https://") || url.startsWith("http://"))) {
                 return@withContext DownloadActionResult(
                     ok = false,
@@ -117,9 +119,9 @@ class DownloadRepository(
                 )
             }
 
-            library.ensureTrackRow(track)
+            library.ensureTrackRow(source)
             val requested = quality ?: settings.settings.first().downloadQuality
-            val extension = DownloadFiles.extensionFor(url, contentType = null, fallbackMime = track.mimeType)
+            val extension = DownloadFiles.extensionFor(url, contentType = null, fallbackMime = source.mimeType)
             val directory = downloadDirectory()
             val previousFile = existing?.filePath?.let(::File)
             val file = previousFile?.takeIf { it.parentFile == directory }

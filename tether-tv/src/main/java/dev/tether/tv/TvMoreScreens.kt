@@ -600,7 +600,7 @@ fun TvSettingsScreen(
                     TvSettingsSection("Online and downloads") {
                         TvToggleRow(
                             title = "Online discovery",
-                            subtitle = "Use ccMixter for Creative Commons music. Local playback never depends on it.",
+                            subtitle = "Use YouTube for online music and video. Local playback never depends on it.",
                             checked = settings.onlineDiscoveryEnabled,
                             onToggle = { viewModel.setOnlineDiscovery(!settings.onlineDiscoveryEnabled) },
                             focusRequester = firstFocus,
@@ -934,14 +934,14 @@ fun TvAboutScreen(onBack: () -> Unit) {
         }
         item {
             Text(
-                "Tether plays the music you own and independent music shared under Creative Commons. No account, no ads, no analytics.",
+                "Tether plays the music you own and streams music and video from YouTube. No account, no ads, no analytics.",
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 28.sp),
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
         item {
             TvAboutPoint("Three ways to listen", "Cover, lyrics, and video share the same audio session, so switching modes never restarts the song.")
-            TvAboutPoint("Open discovery", "Find Creative Commons music from ccMixter and lyrics from LRCLIB. If a service is down, Tether says so.")
+            TvAboutPoint("Open discovery", "Find music and video from YouTube and lyrics from LRCLIB. If a service is down, Tether says so.")
             TvAboutPoint("Downloads you can trust", "Tether saves a track only when its license allows it and the artist provides a file. Attribution stays with the track.")
             TvAboutPoint("Your files stay local", "Music from your device and chosen folders is never uploaded.")
         }

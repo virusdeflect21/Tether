@@ -133,7 +133,7 @@ fun PlayerScreen(
             MobileTopBar(title = "Now playing", onBack = onBack)
             TetherEmptyState(
                 title = "Nothing playing yet",
-                body = "Choose a track from your library or explore openly licensed music. Playback continues in the background once it starts.",
+                body = "Choose a track from your library or pull music and video from YouTube. Playback continues in the background once it starts.",
                 icon = Icons.Rounded.PlayArrow,
                 showMark = true,
                 actionLabel = "Back",

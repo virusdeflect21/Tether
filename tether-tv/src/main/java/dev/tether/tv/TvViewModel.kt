@@ -180,6 +180,14 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
 
     fun downloadPermission(track: Track) = graph.providers.downloadPermission(track)
 
+    /** True when the track's provider can supply a muxed video clip (e.g. a YouTube video). */
+    fun supportsVideo(track: Track): Boolean = graph.providers.supportsVideo(track)
+
+    /** Resolves a fresh video clip URL for the TV "Video" mode. Null when unavailable. */
+    suspend fun resolveVideo(track: Track): String? = withContext(Dispatchers.IO) {
+        graph.providers.resolveVideoStream(track)
+    }
+
     fun pauseDownload(trackId: String) {
         viewModelScope.launch {
             downloads.pause(trackId)

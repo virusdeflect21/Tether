@@ -263,7 +263,7 @@ fun SettingsScreen(
                     ToggleRow(
                         icon = Icons.Rounded.CloudDownload,
                         title = "Online discovery",
-                        subtitle = "Browse Creative Commons music from ccMixter. Your local library works offline.",
+                        subtitle = "Browse and stream music and video from YouTube. Your local library works offline.",
                         checked = settings.onlineDiscoveryEnabled,
                         onCheckedChange = viewModel::setOnlineDiscovery,
                     )
@@ -753,12 +753,12 @@ fun AboutScreen(onBack: () -> Unit, onOpenLicenses: () -> Unit) {
                 }
             }
             Text(
-                "Tether plays the music you own and independent music shared under Creative Commons. No account, no ads, no analytics.",
+                "Tether plays the music you own and pulls music and video from YouTube. No account, no ads, no analytics.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             AboutBullet("Plays offline", "Your device library, chosen folders, imported files, and saved downloads work without a connection.")
-            AboutBullet("Open discovery", "Find Creative Commons music from ccMixter and lyrics from LRCLIB. If a service is down, Tether tells you.")
+            AboutBullet("Open discovery", "Find music and video from YouTube and lyrics from LRCLIB. If a service is down, Tether tells you.")
             AboutBullet("Downloads you can trust", "Tether saves a track only when its license allows it and the artist provides a downloadable file.")
             AboutBullet("Playlists and backups", "Build playlists from real library tracks. Backups save your playlists and settings, never your audio.")
             AboutBullet("Tether on TV", "Install Tether TV for a big-screen player with D-pad navigation and cover, lyrics, and video modes.")
@@ -870,7 +870,7 @@ fun LicensesScreen(onBack: () -> Unit) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                         Text("Music and lyrics", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(
-                            "ccMixter is a community music service. Each track keeps the Creative Commons license and creator attribution supplied by ccMixter. Tether does not relicense provider content.",
+                            "YouTube streaming is provided through NewPipeExtractor. Tether is not affiliated with YouTube and streams through the public web player. Downloading is for personal offline listening only.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

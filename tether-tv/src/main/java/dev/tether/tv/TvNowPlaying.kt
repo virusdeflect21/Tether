@@ -105,6 +105,7 @@ fun TvNowPlayingScreen(
     var reloadLyrics by remember(track?.id) { mutableIntStateOf(0) }
     var lyricsState by remember(track?.id) { mutableStateOf<LyricsViewState?>(null) }
     var videoUri by remember(track?.id) { mutableStateOf(track?.videoUri) }
+    var videoLoading by remember(track?.id) { mutableStateOf(false) }
     var showPlaylistPicker by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
     val playFocus = remember { FocusRequester() }
@@ -134,6 +135,14 @@ fun TvNowPlayingScreen(
     }
     LaunchedEffect(track?.videoUri) {
         if (!track?.videoUri.isNullOrBlank()) videoUri = track.videoUri
+    }
+    LaunchedEffect(track?.id, mode) {
+        if (track == null || mode != TvDisplayMode.VIDEO) return@LaunchedEffect
+        if (!videoUri.isNullOrBlank()) return@LaunchedEffect
+        if (!viewModel.supportsVideo(track)) return@LaunchedEffect
+        videoLoading = true
+        videoUri = viewModel.resolveVideo(track)
+        videoLoading = false
     }
     LaunchedEffect(mode, autoHideControls, track?.id) {
         controlsVisible = true
@@ -249,6 +258,7 @@ fun TvNowPlayingScreen(
                     TvDisplayMode.VIDEO -> VideoMode(
                         track = track,
                         videoUri = videoUri,
+                        loading = videoLoading,
                         state = state,
                         onAttach = { videoLauncher.launch(arrayOf("video/*")) },
                         onShowCover = { mode = TvDisplayMode.COVER },
@@ -620,6 +630,7 @@ private fun LyricsUnavailable(
 private fun VideoMode(
     track: Track,
     videoUri: String?,
+    loading: Boolean,
     state: PlaybackState,
     onAttach: () -> Unit,
     onShowCover: () -> Unit,
@@ -636,16 +647,25 @@ private fun VideoMode(
             )
             Spacer(Modifier.width(32.dp))
             Column {
-                Icon(Icons.Rounded.VideoLibrary, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
-                Spacer(Modifier.height(8.dp))
+                if (loading) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(10.dp))
+                } else {
+                    Icon(Icons.Rounded.VideoLibrary, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
+                    Spacer(Modifier.height(8.dp))
+                }
                 Text(
-                    "No video attached",
+                    if (loading) "Loading video" else "No video attached",
                     style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "Attach a local video file you own. Tether keeps playing the audio and shows the video muted and in sync.",
+                    if (loading) {
+                        "Fetching the matching clip from YouTube\u2026"
+                    } else {
+                        "Pick a track from YouTube to load its clip, or attach a local video file you own. Tether keeps playing the audio and shows the video muted and in sync."
+                    },
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.width(500.dp).padding(top = 5.dp),

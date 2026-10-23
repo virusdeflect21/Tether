@@ -12,6 +12,7 @@ import dev.tether.core.model.ProviderSearchResult
 import dev.tether.core.model.ProviderSection
 import dev.tether.core.model.ProviderTrack
 import dev.tether.core.model.Track
+import dev.tether.core.model.toProviderTrack
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -19,9 +20,9 @@ class ProviderRegistry(
     private val context: Context,
     private val lyricsClient: LrclibClient = LrclibClient(),
 ) {
-    private val ccmixter = CcmixterProvider()
+    private val youTube = YouTubeProvider()
 
-    val musicProviders: List<MusicProvider> = listOf(ccmixter)
+    val musicProviders: List<MusicProvider> = listOf(youTube)
     val lyricsProviders = listOf(lyricsClient)
 
     val descriptors: List<ProviderDescriptor>
@@ -94,26 +95,60 @@ class ProviderRegistry(
     }
 
     fun downloadPermission(track: Track): DownloadPermission {
-        if (!track.isOfflinePlayable) {
-            val license = track.license
-            if (license.isNullOrBlank()) {
-                return DownloadPermission(false, "The source did not declare a license that permits downloading.")
-            }
-            val permitted = license.contains("creativecommons.org", ignoreCase = true) ||
-                license.contains("publicdomain", ignoreCase = true) ||
-                license.contains("sampling+", ignoreCase = true)
-            return if (permitted) {
-                DownloadPermission(
-                    allowed = true,
-                    reason = "The source declares $license. Attribution must be kept with the file; noncommercial licenses are for personal listening only.",
-                    license = license,
-                )
-            } else {
-                DownloadPermission(false, "The declared license ($license) does not explicitly permit downloads.")
-            }
+        if (track.isOfflinePlayable) {
+            return DownloadPermission(true, "This file is already available on your device.")
         }
-        return DownloadPermission(true, "This file is already available on your device.")
+        // Provider tracks follow the provider's own decision. Only sources with no registered
+        // provider fall back to inspecting a declared licence.
+        provider(track.sourceId)?.let { return it.downloadPermission(track.toProviderTrack()) }
+        val license = track.license
+        if (license.isNullOrBlank()) {
+            return DownloadPermission(false, "The source did not declare a license that permits downloading.")
+        }
+        val permitted = license.contains("creativecommons.org", ignoreCase = true) ||
+            license.contains("publicdomain", ignoreCase = true) ||
+            license.contains("sampling+", ignoreCase = true)
+        return if (permitted) {
+            DownloadPermission(
+                allowed = true,
+                reason = "The source declares $license. Attribution must be kept with the file; noncommercial licenses are for personal listening only.",
+                license = license,
+            )
+        } else {
+            DownloadPermission(false, "The declared license ($license) does not explicitly permit downloads.")
+        }
     }
+
+    /**
+     * Returns a copy of [track] carrying a fresh, directly playable URL. Signed CDN URLs expire,
+     * so this is called right before playback and before a download starts. Tracks that are
+     * already local, or whose URL the provider cannot refresh, are returned unchanged.
+     */
+    suspend fun resolveStream(track: Track): Track {
+        if (track.isOfflinePlayable) return track
+        val provider = provider(track.sourceId) ?: return track
+        val needsRefresh = track.remoteUri.isNullOrBlank() || track.sourceId == YouTubeProvider.SOURCE_ID
+        if (!needsRefresh) return track
+        val resolved = runCatching { provider.resolveStream(track.toProviderTrack()) }.getOrNull()
+            ?: return track
+        if (resolved.uri.isBlank()) return track
+        return track.copy(
+            uri = resolved.uri,
+            remoteUri = resolved.uri,
+            mimeType = resolved.mimeType ?: track.mimeType,
+        )
+    }
+
+    /** Resolves a muxed video clip for providers that expose one (used by the TV Video mode). */
+    suspend fun resolveVideoStream(track: Track): String? {
+        val provider = provider(track.sourceId) ?: return null
+        return runCatching { provider.resolveVideo(track.toProviderTrack())?.uri }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+    }
+
+    fun supportsVideo(track: Track): Boolean =
+        provider(track.sourceId)?.descriptor?.supports(ProviderCapability.VIDEO) == true
 
     fun providerSummary(): String = musicProviders.joinToString(", ") { it.descriptor.name } + ", LRCLIB"
 }

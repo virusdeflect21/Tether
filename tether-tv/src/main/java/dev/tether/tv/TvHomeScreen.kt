@@ -470,7 +470,7 @@ fun TvLibraryScreen(
             tracks.isEmpty() -> {
                 TvEmptyState(
                     title = "No tracks yet",
-                    body = "Rescan your device, add a music folder, or import individual files. Downloads from openly licensed providers also appear here.",
+                    body = "Rescan your device, add a music folder, or import individual files. Downloads from online providers also appear here.",
                     action = {
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             TvButton("Rescan", viewModel::scanMediaStore, icon = Icons.Rounded.Refresh, primary = true)

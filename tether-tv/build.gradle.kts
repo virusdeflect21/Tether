@@ -37,6 +37,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -63,6 +64,8 @@ dependencies {
     implementation(project(":core:downloads"))
     implementation(project(":core:player"))
     implementation(project(":core:design"))
+
+    coreLibraryDesugaring(libs.desugar.jdk.libs.nio)
 
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)

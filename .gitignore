@@ -21,3 +21,6 @@ BeatWave-6.1.1/
 
 # Local build logs
 build-*.log
+
+# Locally provisioned JDK used to build (not part of the project)
+.jdk21/

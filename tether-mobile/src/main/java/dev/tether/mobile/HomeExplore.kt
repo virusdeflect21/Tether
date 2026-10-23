@@ -728,7 +728,7 @@ fun ExploreScreen(
     Column(Modifier.fillMaxSize()) {
         MobileTopBar(
             title = "Explore",
-            subtitle = "Independent, openly licensed music",
+            subtitle = "Music and video, straight from YouTube",
             actions = {
                 if (state.loading) {
                     CircularProgressIndicator(
@@ -754,20 +754,20 @@ fun ExploreScreen(
             item {
                 Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 10.dp)) {
                     Text(
-                        "OPENLY LICENSED",
+                        "TRENDING NOW",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Music worth\nsharing.",
+                        "Find something\nto play.",
                         style = MaterialTheme.typography.displayMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Independent artists from ccMixter, shared under Creative Commons.",
+                        "Charts, music and gaming picks pulled live from YouTube.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -777,7 +777,7 @@ fun ExploreScreen(
                 !state.onlineEnabled -> item {
                     TetherEmptyState(
                         title = "Online discovery is off",
-                        body = "Turn it on in Settings to browse Creative Commons music from ccMixter. Your local library is unaffected.",
+                        body = "Turn it on in Settings to browse YouTube. Your local library is unaffected.",
                         actionLabel = "Open settings",
                         onAction = onOpenSettings,
                         icon = Icons.Rounded.WifiOff,
@@ -804,7 +804,7 @@ fun ExploreScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             CircularProgressIndicator(strokeWidth = 2.dp)
                             Text(
-                                "Asking ccMixter for real tracks\u2026",
+                                "Loading YouTube\u2026",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -843,7 +843,7 @@ fun ExploreScreen(
                     }
                     item {
                         Text(
-                            "Music, artwork and license data from ccMixter.",
+                            "Music, video and artwork from YouTube.",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.66f),
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 26.dp),
@@ -884,16 +884,16 @@ fun ExploreReleaseCard(release: ProviderRelease, onClick: () -> Unit) {
                 title = release.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f),
-                cornerRadius = 22.dp,
-                initialsSize = 32.sp,
+                    .aspectRatio(16f / 9f),
+                cornerRadius = 20.dp,
+                initialsSize = 30.sp,
             )
             Row(
                 Modifier
                     .align(Alignment.TopStart)
                     .padding(9.dp),
             ) {
-                TetherBadge("ccMixter", color = Color.White)
+                TetherBadge(release.providerId.replaceFirstChar { it.uppercase() }, color = Color.White)
             }
         }
         Spacer(Modifier.height(9.dp))
@@ -905,7 +905,7 @@ fun ExploreReleaseCard(release: ProviderRelease, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            release.creator.ifBlank { "Unknown creator" },
+            release.creator.ifBlank { "YouTube" },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -981,7 +981,7 @@ fun OnboardingScreen(
                 OnboardingFeature(
                     icon = Icons.Rounded.Search,
                     title = "Real providers only",
-                    body = "Creative Commons music from ccMixter and lyrics from LRCLIB.",
+                    body = "Music and video from YouTube and lyrics from LRCLIB.",
                 )
                 OnboardingFeature(
                     icon = Icons.Rounded.Shield,

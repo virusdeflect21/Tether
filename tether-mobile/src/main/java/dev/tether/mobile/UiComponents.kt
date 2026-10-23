@@ -265,7 +265,7 @@ fun TrackCard(
                 title = track.displayAlbum,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f),
+                    .aspectRatio(16f / 9f),
                 cornerRadius = 22.dp,
                 initialsSize = 34.sp,
             )
@@ -1183,7 +1183,7 @@ fun ProviderReleaseSheet(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        release.creator.ifBlank { "ccMixter artist" },
+                        release.creator.ifBlank { "YouTube" },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

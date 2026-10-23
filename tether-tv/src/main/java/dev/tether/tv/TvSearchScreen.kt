@@ -67,7 +67,7 @@ fun TvSearchScreen(
     Column(Modifier.fillMaxSize().padding(horizontal = 38.dp, vertical = 28.dp)) {
         TvScreenHeader(
             title = "Search",
-            subtitle = "Your library first, then openly licensed music from ccMixter.",
+            subtitle = "Your library first, then music and video from YouTube.",
         )
         Spacer(Modifier.height(16.dp))
         TvFocusable(
@@ -182,7 +182,7 @@ fun TvSearchScreen(
                     item {
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TvSectionTitle("Online · ccMixter")
+                            TvSectionTitle("Online · YouTube")
                             TetherBadge("LICENSED")
                         }
                     }
@@ -209,7 +209,7 @@ fun TvSearchScreen(
                         TvEmptyState(
                             title = "No matches",
                             body = if (state.searchedOnline) {
-                                "Nothing matched in your library or from ccMixter. Try a different spelling."
+                                "Nothing matched in your library or on YouTube. Try a different spelling."
                             } else {
                                 "Nothing matched in your library. Online discovery is off or unavailable."
                             },

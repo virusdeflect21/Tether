@@ -19,6 +19,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -248,12 +250,13 @@ class PlaybackController private constructor(context: Context) {
     }
 
     fun playQueue(tracks: List<Track>, startIndex: Int = 0, shuffle: Boolean = false) {
-        val distinct = tracks.distinctBy { it.id }.filter { TrackMedia.playableUri(it) != null }
-        if (distinct.isEmpty()) {
-            _state.value = _state.value.copy(error = "There is nothing playable in this selection.")
-            return
-        }
         scope.launch {
+            val resolved = resolveQueue(tracks)
+            val distinct = resolved.distinctBy { it.id }.filter { TrackMedia.playableUri(it) != null }
+            if (distinct.isEmpty()) {
+                _state.value = _state.value.copy(error = "There is nothing playable in this selection.")
+                return@launch
+            }
             ensureRows(distinct)
             val c = controller ?: return@launch
             val index = startIndex.coerceIn(0, distinct.lastIndex)
@@ -268,14 +271,15 @@ class PlaybackController private constructor(context: Context) {
 
     fun playNext(track: Track) {
         scope.launch {
-            ensureRows(listOf(track))
+            val resolved = resolveQueue(listOf(track)).firstOrNull() ?: track
+            ensureRows(listOf(resolved))
             val c = controller ?: return@launch
             if (c.mediaItemCount == 0 || c.currentMediaItemIndex < 0) {
-                c.setMediaItems(listOf(track.toMediaItem()), 0, 0)
+                c.setMediaItems(listOf(resolved.toMediaItem()), 0, 0)
                 c.prepare()
             } else {
                 val target = (c.currentMediaItemIndex + 1).coerceAtMost(c.mediaItemCount)
-                c.addMediaItem(target, track.toMediaItem())
+                c.addMediaItem(target, resolved.toMediaItem())
             }
             refreshState(forceQueue = true)
         }
@@ -283,9 +287,10 @@ class PlaybackController private constructor(context: Context) {
 
     fun addToQueue(track: Track) {
         scope.launch {
-            ensureRows(listOf(track))
+            val resolved = resolveQueue(listOf(track)).firstOrNull() ?: track
+            ensureRows(listOf(resolved))
             val c = controller ?: return@launch
-            c.addMediaItem(track.toMediaItem())
+            c.addMediaItem(resolved.toMediaItem())
             if (c.mediaItemCount == 1) c.prepare()
             refreshState(forceQueue = true)
         }
@@ -294,11 +299,12 @@ class PlaybackController private constructor(context: Context) {
     fun addToQueueNext(tracks: List<Track>) {
         if (tracks.isEmpty()) return
         scope.launch {
-            ensureRows(tracks)
+            val resolved = resolveQueue(tracks)
+            ensureRows(resolved)
             val c = controller ?: return@launch
             val at = if (c.currentMediaItemIndex >= 0) c.currentMediaItemIndex + 1 else 0
-            c.addMediaItems(at.coerceAtMost(c.mediaItemCount), tracks.distinctBy { it.id }.map { it.toMediaItem() })
-            if (c.mediaItemCount == tracks.size) c.prepare()
+            c.addMediaItems(at.coerceAtMost(c.mediaItemCount), resolved.distinctBy { it.id }.map { it.toMediaItem() })
+            if (c.mediaItemCount == resolved.size) c.prepare()
             refreshState(forceQueue = true)
         }
     }
@@ -388,8 +394,19 @@ class PlaybackController private constructor(context: Context) {
     fun retry() {
         val c = controller ?: return
         _state.value = _state.value.copy(error = null)
-        c.prepare()
-        c.play()
+        scope.launch {
+            val current = _state.value.currentTrack
+            if (current != null && !current.isOfflinePlayable) {
+                val resolved = runCatching { graph.providers.resolveStream(current) }.getOrDefault(current)
+                val index = c.currentMediaItemIndex
+                if (!resolved.remoteUri.isNullOrBlank() && index in 0 until c.mediaItemCount) {
+                    ensureRows(listOf(resolved))
+                    c.replaceMediaItem(index, resolved.toMediaItem())
+                }
+            }
+            c.prepare()
+            c.play()
+        }
     }
 
     fun setSleepTimer(minutes: Int) {
@@ -448,6 +465,17 @@ class PlaybackController private constructor(context: Context) {
         withContext(Dispatchers.IO) {
             tracks.forEach { graph.library.ensureTrackRow(it) }
         }
+    }
+
+    /**
+     * Refreshes playable URLs for a batch of tracks before they are handed to the player.
+     * Providers that use signed, expiring URLs must be re-resolved; requests run together so a
+     * queue of remote results does not resolve one item at a time.
+     */
+    private suspend fun resolveQueue(tracks: List<Track>): List<Track> = coroutineScope {
+        tracks.map { track ->
+            async { runCatching { graph.providers.resolveStream(track) }.getOrDefault(track) }
+        }.map { it.await() }
     }
 
     private fun MediaItem.toTrackStub(): Track {

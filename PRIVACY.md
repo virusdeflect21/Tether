@@ -13,7 +13,7 @@ Tether makes network requests only for features you use:
 
 | Purpose | Destination |
 | --- | --- |
-| Online music search and streaming | `ccmixter.org` and the media URLs it publishes |
+| Online music and video search and streaming | `youtube.com`, its InnerTube endpoints, and the media URLs it publishes |
 | Lyrics lookup | `lrclib.net` |
 | Remote artwork | URLs published by the provider |
 | User-requested downloads | The media URL published by the provider |

@@ -14,13 +14,17 @@ Tether is built with open-source Android and Kotlin libraries. The main componen
 | Coil | Image loading | Apache License 2.0 |
 | Palette | Artwork color extraction | Apache License 2.0 |
 | Material Icons | UI icons | Apache License 2.0 |
+| NewPipeExtractor | Resolving YouTube metadata and stream URLs | GNU General Public License v3.0 |
+| nanojson | JSON parsing used by NewPipeExtractor | MIT License |
+| Rhino | JavaScript engine used by NewPipeExtractor for player signatures | Mozilla Public License 2.0 |
+| jsoup | HTML parsing used by NewPipeExtractor | MIT License |
 | Poppins | Bundled UI typeface | SIL Open Font License 1.1 |
 
 The full dependency set and exact versions are declared in `gradle/libs.versions.toml` and the module `build.gradle.kts` files. Transitive dependencies are distributed under their respective licenses; their license files are packaged with the APK where required. The full Poppins license text is included at `licenses/Poppins-OFL.txt`.
 
 ## Services
 
-- **ccMixter** — online catalog of Creative Commons music. Tracks remain the property of their creators and are used under the license published with each track.
+- **YouTube** — online music and video catalog, resolved through NewPipeExtractor against the public web player. Tether is not affiliated with, endorsed by, or sponsored by YouTube. Media remains the property of its rights holders. Streaming and downloads are the user's responsibility and are intended for personal use.
 - **LRCLIB** — community lyrics database. Lyrics remain the property of their authors.
 
 ## Brand assets

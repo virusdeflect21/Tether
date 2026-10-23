@@ -163,7 +163,7 @@ fun SearchScreen(
                     ) {
                         TetherEmptyState(
                             title = "Search everything",
-                            body = "Find music in your library, then explore Creative Commons tracks from ccMixter.",
+                            body = "Search your library first, then pull music and videos straight from YouTube.",
                             icon = Icons.Rounded.Search,
                             showMark = false,
                         )
@@ -247,7 +247,7 @@ fun SearchScreen(
                         ) {
                             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                             Text(
-                                "Checking ccMixter for openly licensed music\u2026",
+                                "Searching YouTube\u2026",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -263,7 +263,7 @@ fun SearchScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            TetherSectionHeader("From ccMixter", modifier = Modifier.weight(1f))
+                            TetherSectionHeader("From YouTube", modifier = Modifier.weight(1f))
                             TetherBadge("Online")
                         }
                     }
@@ -306,9 +306,9 @@ fun SearchScreen(
                         TetherEmptyState(
                             title = "No matches yet",
                             body = if (state.results.searchedOnline) {
-                                "Nothing matched in your library or from ccMixter. Try a different spelling or a broader phrase."
+                                "Nothing matched in your library or on YouTube. Try a different spelling or a broader phrase."
                             } else {
-                                "Nothing matched in your library. Turn on online discovery in Settings to check ccMixter too."
+                                "Nothing matched in your library. Turn on online discovery in Settings to check YouTube too."
                             },
                             icon = Icons.Rounded.Search,
                             showMark = false,
@@ -318,7 +318,7 @@ fun SearchScreen(
                 item {
                     Spacer(Modifier.height(20.dp))
                     dev.tether.core.design.TetherInfoBanner(
-                        "Online results are catalog entries, not downloads. Playback starts only after the provider supplies a stream, and downloads are offered only when the declared license permits them.",
+                        "Online results stream from YouTube. Playback stays on the web player; downloads are kept for your personal offline listening.",
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )
                 }

@@ -78,6 +78,29 @@ data class ProviderTrack(
     )
 }
 
+/**
+ * Reconstructs the provider view of a persisted [Track] so a provider can re-resolve a
+ * fresh stream. Only meaningful for [TrackOrigin.REMOTE] provider tracks.
+ */
+fun Track.toProviderTrack(): ProviderTrack = ProviderTrack(
+    id = id,
+    providerItemId = providerItemId ?: remoteUri ?: "",
+    title = title,
+    artist = artist,
+    album = album,
+    sourceId = sourceId,
+    durationMs = durationMs,
+    streamUri = remoteUri,
+    artworkUri = artworkUri,
+    mimeType = mimeType,
+    sizeBytes = sizeBytes,
+    trackNumber = trackNumber,
+    year = year,
+    license = license,
+    videoUri = videoUri,
+    sourceLabel = sourceLabel,
+)
+
 data class ProviderSearchResult(
     val releases: List<ProviderRelease> = emptyList(),
     val tracks: List<ProviderTrack> = emptyList(),
@@ -108,9 +131,25 @@ interface MusicProvider {
     /** Some providers only permit downloading specific items. Never assume. */
     fun downloadPermission(track: ProviderTrack): DownloadPermission
 
-    /** Resolve a fresh, non-expiring playback route if the stored uri needs refreshing. */
-    suspend fun resolveStream(track: ProviderTrack): String? = track.streamUri
+    /**
+     * Resolve a fresh, directly playable route. Providers that hand out signed CDN URLs
+     * must be re-resolved at play and download time because those URLs expire.
+     */
+    suspend fun resolveStream(track: ProviderTrack): ResolvedStream? =
+        track.streamUri?.takeIf { it.isNotBlank() }?.let { ResolvedStream(it, track.mimeType) }
+
+    /** Resolve a muxed video clip for a track when the provider has one. Null when unsupported. */
+    suspend fun resolveVideo(track: ProviderTrack): ResolvedStream? = null
 }
+
+/**
+ * A directly playable route to a provider item. [uri] may be a signed, expiring CDN URL,
+ * so treat it as short-lived and re-resolve rather than persisting it forever.
+ */
+data class ResolvedStream(
+    val uri: String,
+    val mimeType: String? = null,
+)
 
 interface LyricsProvider {
     val descriptor: ProviderDescriptor

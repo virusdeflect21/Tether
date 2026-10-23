@@ -93,13 +93,13 @@ class DiagnosticsRepository(
         }
         if (NetworkStatus.isOnline(context) && current.onlineDiscoveryEnabled) {
             val results = coroutineScope {
-                val ccmixter = async {
-                    checkHttp("ccMixter API", "https://ccmixter.org/api/query?f=json&limit=1&search=jazz")
+                val youtube = async {
+                    checkHttp("YouTube", "https://www.youtube.com/")
                 }
                 val lrclib = async {
                     checkHttp("LRCLIB API", "https://lrclib.net/api/search?track_name=test")
                 }
-                listOf(ccmixter.await(), lrclib.await())
+                listOf(youtube.await(), lrclib.await())
             }
             checks += results
         } else {

@@ -1,6 +1,6 @@
 # Tether
 
-**Music, untethered.** Tether is a local-first music player for Android and Android TV. It plays the music already on your device, opens folders through the system picker, and can discover openly licensed music from ccMixter. No account, no ads, and no invented streams or lyrics.
+**Music, untethered.** Tether is a local-first music player for Android and Android TV. It plays the music already on your device, opens folders through the system picker, and can search and stream music and video from YouTube. No account, no ads, and no invented streams or lyrics.
 
 Tether comes as two separate apps. Each install keeps its own on-device library, favorites, playlists, settings, and playback state. Nothing is synced between the phone and the TV.
 
@@ -37,7 +37,7 @@ Enable "Install unknown apps" if you install directly on the device. The TV app 
 
 More: [mobile search](screenshots/mobile-search.png), [mobile downloads](screenshots/mobile-downloads.png), [mobile playlists](screenshots/mobile-playlists.png), [TV screensaver](screenshots/tv-screensaver.png).
 
-Screenshots use short local test tracks, including one CC BY-NC 4.0 track from ccMixter. Artwork shown here is generated locally.
+Screenshots use short local test tracks. Artwork shown here is generated locally.
 
 ## What it does
 
@@ -49,7 +49,7 @@ Screenshots use short local test tracks, including one CC BY-NC 4.0 track from c
 - **Playlists** with create, rename, delete, add/remove tracks, and M3U import.
 - **Queue management**, shuffle, repeat, seek, and resume-state persistence.
 - **Lyrics** from LRCLIB or an imported `.lrc` file. Synced, plain-text, and unavailable states are shown honestly. Plain lyrics are never animated as if they were timed.
-- **Downloads** only when the provider declares a license that explicitly permits downloading (Creative Commons, public domain, or sampling+). Attribution and license remain with the track. No DRM bypass and no guessed download URLs.
+- **Downloads** are offered per provider. YouTube audio can be saved for personal offline listening; nothing is guessed, and a stream that the provider cannot resolve is never offered as a file.
 - **Themes**: dark, light, or system, with the Tether blue/violet/magenta accent or a custom accent.
 - **Metadata and artwork** from local tags and embedded artwork, with generated fallback covers.
 - **Poppins typography** bundled under the SIL Open Font License.
@@ -68,18 +68,18 @@ Screenshots use short local test tracks, including one CC BY-NC 4.0 track from c
 - Landscape, D-pad-first UI with a visible focus ring on every actionable element.
 - Sidebar navigation: Home, Search, Library, Playlists, Downloads, and Settings.
 - Now Playing with three modes: **Cover**, **Lyrics**, and **Video**.
-- Switching modes never restarts playback. Video mode attaches a local video file, plays it muted on a second ExoPlayer, and keeps it synchronized with the audio.
+- Switching modes never restarts playback. Video mode loads the matching YouTube clip (or a local video file), plays it muted on a second ExoPlayer, and keeps it synchronized with the audio.
 - Screensaver with the clock, current track, and artwork. A remote key dismisses it.
 - Startup screen preference (Home or Now Playing), lyrics size, artwork scale, and screensaver timeout.
 - M3U playlist import and licensed downloads.
 
 ## Content policy
 
-Tether never fabricates media. If the local library has no match and an online provider is unreachable, the app says so. If the provider does not return a stream, the track is not playable. If a license does not allow downloads, the download action is unavailable and the reason is shown.
+Tether never fabricates media. If the local library has no match and an online provider is unreachable, the app says so. If the provider does not return a stream, the track is not playable.
 
-The only online music provider currently enabled is **ccMixter** (`https://ccmixter.org`). Lyrics come from **LRCLIB** (`https://lrclib.net`). Artwork may be loaded from the URLs published by those services. Internet Archive support is not shipped.
+The online provider is **YouTube**, resolved through [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) against the public web player. Lyrics come from **LRCLIB** (`https://lrclib.net`). Artwork and thumbnails are loaded from the URLs YouTube publishes. Internet Archive support is not shipped. Tether is not affiliated with YouTube.
 
-Downloaded files are stored in the app's external files directory under `Tether downloads`. Keeping attribution with shared files is the user's responsibility; noncommercial licenses are for personal listening.
+Downloaded files are stored in the app's external files directory under `Tether downloads`. YouTube downloads are for personal offline listening; a signed stream URL expires, so playback and downloads always re-resolve a fresh one.
 
 ## Privacy
 
@@ -122,7 +122,7 @@ Run unit tests with `./gradlew test`.
 ## Project layout
 
 ```
-core/model       domain models, settings, formatting
+core/model       domain models, settings, formatting, provider contract
 core/database    Room entities, DAOs, migrations
 core/data        library, scanning, search, providers, playlists, backup, diagnostics
 core/downloads   permission checks, resumable downloads, WorkManager integration
@@ -135,8 +135,8 @@ tether-tv        Android TV Compose app
 
 ## Known limitations
 
-- Internet Archive is not included; only ccMixter is available for online discovery.
-- TV video mode requires a local video file selected with the system picker. It is a companion video track, not a video streaming provider.
+- Internet Archive is not included; YouTube is the only online provider.
+- TV video mode loads the YouTube clip for a track automatically, or a local video file you pick. YouTube stream URLs expire, so a clip is re-resolved each time it is opened.
 - Phone and TV libraries, favorites, playlists, settings, and playback sessions are separate. Install and set up each app independently.
 - The release APKs use a development signing key, not a production app-store key.
 - Online availability depends on the provider being reachable from your network.
