@@ -99,11 +99,15 @@ class YouTubeProvider(
 
     override suspend fun browse(): List<ProviderSection> = coroutineScope {
         ensureInit()
-        val kiosks = listOf(
-            "Trending" to "Trending on YouTube",
-            "Music" to "Music",
-            "Gaming" to "Gaming",
-        )
+        // YouTube renamed its kiosk ids ("Trending" -> "trending_music", ...), so resolve
+        // against the ids the extractor actually knows about and skip anything empty.
+        val preferred = listOf("trending_music" to "Music", "trending_gaming" to "Trending", "live" to "Live")
+        val known = runCatching { service.kioskList.availableKiosks.toList() }.getOrDefault(emptyList())
+        val kiosks = preferred.mapNotNull { (id, title) ->
+            val match = known.firstOrNull { it.equals(id, ignoreCase = true) }
+                ?: known.firstOrNull { it.startsWith(id.substringBeforeLast('_'), ignoreCase = true) && it.endsWith(id.substringAfterLast('_'), ignoreCase = true) }
+            match?.let { it to title }
+        }
         kiosks.map { (id, title) ->
             async {
                 runCatching {
@@ -222,7 +226,7 @@ class YouTubeProvider(
             sourceId = SOURCE_ID,
             durationMs = duration.coerceAtLeast(0) * 1000L,
             streamUri = null,
-            artworkUri = bestThumbnail(thumbnails),
+            artworkUri = thumbnailFor(videoId, thumbnails),
             mimeType = null,
             license = null,
             videoUri = null,
@@ -238,7 +242,7 @@ class YouTubeProvider(
             title = name.orEmpty().ifBlank { "Untitled" },
             creator = uploaderName.orEmpty().ifBlank { "YouTube" },
             description = shortDescription.orEmpty(),
-            artworkUri = bestThumbnail(thumbnails),
+            artworkUri = thumbnailFor(videoId, thumbnails),
             trackCount = 1,
             isCollection = false,
         )
@@ -257,7 +261,7 @@ class YouTubeProvider(
             sourceId = SOURCE_ID,
             durationMs = seconds.coerceAtLeast(0) * 1000L,
             streamUri = best.content,
-            artworkUri = bestThumbnail(thumbnails),
+            artworkUri = thumbnailFor(videoId, thumbnails),
             mimeType = best.format?.mimeType,
             license = licence?.takeIf { it.isNotBlank() },
             videoUri = null,
@@ -310,6 +314,11 @@ class YouTubeProvider(
             ?.filter { it.url.isNotBlank() }
             ?.maxByOrNull { it.height.coerceAtLeast(0) }
             ?.url
+
+    /** Falls back to the canonical YouTube thumbnail when the extractor returns none. */
+    private fun thumbnailFor(videoId: String?, images: List<Image>?): String? =
+        bestThumbnail(images) ?: videoId?.takeIf { it.isNotBlank() }
+            ?.let { "https://i.ytimg.com/vi/$it/hqdefault.jpg" }
 
     private fun resolutionHeight(stream: VideoStream): Int =
         stream.resolution.orEmpty().filter { it.isDigit() }.toIntOrNull() ?: 0

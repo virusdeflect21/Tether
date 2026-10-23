@@ -453,7 +453,9 @@ fun TetherMobileRoot(
                         )
                     }
                 }
-                val showMini = playerState.currentTrack != null &&
+                var miniDismissed by remember { mutableStateOf(false) }
+                LaunchedEffect(playerState.currentTrack?.id) { miniDismissed = false }
+                val showMini = playerState.currentTrack != null && !miniDismissed &&
                     current !is MobileDestination.Player &&
                     current !is MobileDestination.Queue &&
                     current !is MobileDestination.Lyrics
@@ -464,6 +466,7 @@ fun TetherMobileRoot(
                         onOpen = { push(MobileDestination.Player) },
                         onPlayPause = playerViewModel::togglePlayPause,
                         onNext = playerViewModel::next,
+                        onDismiss = { miniDismissed = true },
                         modifier = if (showBottom) Modifier else Modifier.navigationBarsPadding(),
                     )
                 }

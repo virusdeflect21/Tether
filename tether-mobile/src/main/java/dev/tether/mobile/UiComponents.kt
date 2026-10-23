@@ -1,12 +1,15 @@
 package dev.tether.mobile
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -77,6 +80,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -84,8 +88,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -449,6 +457,7 @@ fun MiniPlayer(
     onOpen: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
+    onDismiss: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val track = state.currentTrack ?: return
@@ -457,13 +466,35 @@ fun MiniPlayer(
     } else {
         0f
     }
+    val density = LocalDensity.current
+    var dragY by remember { mutableFloatStateOf(0f) }
+    val dropIn = remember { Animatable(0f) }
+    LaunchedEffect(track.id) { dropIn.animateTo(1f, tween(220)) }
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                alpha = dropIn.value
+                translationY = (1f - dropIn.value) * 24.dp.toPx() + dragY
+            }
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         TetherGlass(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(10.dp, RoundedCornerShape(27.dp), clip = false)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { change, amount ->
+                            change.consume()
+                            dragY = (dragY + amount).coerceAtLeast(0f)
+                        },
+                        onDragEnd = {
+                            if (dragY > with(density) { 56.dp.toPx() }) onDismiss() else dragY = 0f
+                        },
+                        onDragCancel = { dragY = 0f },
+                    )
+                },
             shape = RoundedCornerShape(27.dp),
         ) {
             Column {
